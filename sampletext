@@ -1,0 +1,205 @@
+Background and Timeline of CSP Update for Salesforce Integration
+Project Context:
+This task relates to enabling Salesforce integration via iframe on a static site hosted through AWS CloudFront. The Digital Marketing Team (DMT), led by Annette (ADT), requested CloudOps support to modify the Content Security Policy (CSP) to allow new DNS URLs.
+
+Timeline of Actions:
+February Meeting:
+
+Annette held a walkthrough session.
+
+Stated they are shifting from Salesforce URLs to internal DNS entries for iframe integration.
+
+Asked me to pick URLs from the Confluence page which included hostname + /contactus path.
+
+I explicitly asked her to confirm what to add for Dev and Test, and she pointed to the Confluence page.
+
+I confirmed: no existing URLs needed to be removed, only new URLs to be added.
+
+She requested a Jira ticket for tracking, which I created and shared with her.
+
+April 1 – Dev CSP Update:
+
+Added CSP entry with hostname + /contactus as per instructions.
+
+Posted update in Teams group chat (which included Annette and DMT).
+
+DMT confirmed it was working.
+
+Annette also acknowledged that the URL added was correct.
+
+April 3 – Test CSP Update:
+
+Mirrored same change to Test.
+
+Update posted in group chat.
+
+Again confirmed as working by both DMT and Annette.
+
+No further infra or CSP changes were made after this.
+
+Issue Reported on May 6:
+DMT deployed a new version of code.
+
+They observed iframe integration broken in Dev and Test environments.
+
+Annette asked if any infra changes had been made.
+
+I confirmed: No AWS-side or CSP changes since April.
+
+Upon checking DevTools, she noted a CSP error.
+
+She asked whether the CSP included /contactus. I confirmed yes, as per her earlier direction.
+
+She requested it be changed to just the hostname.
+
+I promptly removed the /contactus path from the CSP.
+
+DMT redeployed and confirmed the integration started working again.
+
+Current Misalignment:
+Annette is now suggesting:
+
+She never requested the /contactus path in the CSP.
+
+The inclusion of it was a mistake on my part.
+
+She referred to a later email (April 4) containing URLs without paths as the correct source.
+
+However:
+
+The Jira ticket was created based on her explicit February guidance and the Confluence page she provided.
+
+She acknowledged the added URL as correct in group chat and during Dev/Test validation in April.
+
+The integration worked successfully for over a month, indicating no CSP misconfiguration.
+
+She did not review the ticket or raise concerns during or after implementation until the issue surfaced with their own code deployment on May 6.
+
+Conclusion:
+This appears to be a retroactive reinterpretation of requirements, likely triggered by the recent code issues. My actions were:
+
+Based on documented guidance and group consensus.
+
+Communicated clearly in real-time.
+
+Verified as successful at each step by both DMT and Annette.
+
+I’ve cooperated fully to remediate the issue and ensured it was resolved swiftly by updating the CSP as requested. It’s important to clarify that no infra-level changes were made independently or without direction, and the added values were always openly communicated and validated by stakeholders at each stage.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+I wanted to provide clarification and a timeline summary regarding the recent CSP update related to the Salesforce iframe integration, which was brought up following the issues observed after the May 6 deployment.
+
+Back in February, during a walkthrough led by Annette, the direction was given to update the CSP to allow iframe integration using our new internal DNS entries. I specifically asked for clarification on what URLs to include for Dev and Test, and was directed to refer to the Confluence page, which listed URLs in the format: hostname/contactus.
+
+Following that:
+
+A Jira ticket was created with the specified URLs and shared with Annette as requested.
+
+On April 1, I implemented the CSP changes for Dev, adding the URL with the /contactus path as shown in the Confluence page.
+
+On April 3, the same change was made for Test.
+
+Both changes were communicated in our Teams group chat, where DMT confirmed the integration was working. Annette was part of the conversation and also acknowledged the correct URL format at the time.
+
+No further infrastructure or CSP changes have been made on my end since those implementations.
+
+On May 6, following a new deployment by DMT, it was reported that the iframe integration stopped working. After reviewing the DevTools CSP error and confirming the /contactus path in the CSP, I was asked to revise it to include only the hostname. I made the requested change, and after the update, the integration resumed functioning.
+
+I understand there may be confusion about the origin of the /contactus path in the CSP. However, it’s important to note that:
+
+The original direction (Confluence and meeting discussion) pointed to that format.
+
+The URLs were validated and confirmed during Dev/Test deployment.
+
+The integration was working successfully for over a month.
+
+I’m happy to assist with any further adjustments needed going forward, and I’m sharing this summary just to ensure alignment across all teams involved.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+This is a classic case of someone retroactively shifting responsibility by referencing an older email that wasn't reaffirmed during the final requirement conversation. Here’s how to professionally handle this, both in writing and verbally, without sounding defensive, while protecting your position:
+
+Key Points to Anchor On:
+Date of Action Matters: You acted after the Feb 26th meeting where Annette walked the team through the changes. That meeting superseded earlier communications.
+
+She Led the Walkthrough: She directed the team to the Confluence page, which had the URLs with /contactus.
+
+You Asked for Clarification: You explicitly asked in that meeting what should be added for Dev/Test and she pointed to the Confluence URLs.
+
+Her Review Opportunity: She had multiple opportunities to validate and raise concerns when:
+
+You shared the Jira ticket
+
+You posted updates during the Dev/Test CSP changes
+
+She confirmed the URLs were correct in chat
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+1. Summary for Your Manager / Leadership
+Here’s how you can explain the situation in a calm, composed, and factual way:
+
+Subject: Clarification on Salesforce CSP Issue – Timeline and Observations
+
+Hi [Manager's Name],
+
+I wanted to provide some clarity on the recent CSP-related issue that’s been escalated around the Salesforce iframe integration. While the issue itself was resolved, the communication around it has been challenging and I feel it’s important to share the context.
+
+Background & Timeline:
+
+Back in February, Annette (ADT) scheduled a walkthrough meeting where she provided direction on CSP updates needed for the new Salesforce integration.
+
+I asked for confirmation on what URLs to add for Dev/Test environments. She directed me (and the team) to a Confluence page containing the new DNS URLs, all of which included the /contactus path.
+
+I created a Jira ticket based on this and shared it with her. She did not flag any issues at the time.
+
+On April 1 and 3, I implemented the changes in Dev and Test respectively. I posted updates in the group chat that included Annette and the Digital Marketing Team. They all confirmed that the integration was working as expected.
+
+No infrastructure or CSP changes were made after that point.
+
+Issue Raised:
+
+On May 6, following a new DMT code deployment, the integration stopped working.
+
+Annette later raised concerns that the CSP entry should not have included /contactus, and referenced an older email from February 24 as the correct source of truth.
+
+I clarified that the changes were made per the walkthrough on February 26, not the prior email, and were validated in real-time post-deployment.
+
+To support troubleshooting, I removed the path from the CSP entry, after which the integration began working again.
+
+Observations:
+I’ve maintained professional communication throughout this process. However, I want to flag that the current dynamics have become a bit tense. I’ve had to repeatedly defend my actions, even though:
+
+The implementation was based on team-approved direction.
+
+Multiple confirmation points were provided (Jira, chat, and successful tests).
+
+The issue surfaced only after unrelated code changes.
+
+This isn't about blame, but I do feel it’s important to highlight that I’m being placed in a position where I have to retroactively justify and prove actions that were well-documented and communicated clearly at the time.
+
+I remain committed to collaboration and transparency, and I’m open to any improvements we want to make in change validation or documentation processes to avoid this in the future.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+To help avoid future confusion and clarify any remaining gaps, I wanted to ask a few follow-up questions to better understand the sequence of events:
+
+During the April 1st and 3rd changes, when I added the DNS URLs (with /contactus) to Dev and Test CSPs, both you and DMT confirmed in the group chat that the integration was working. If those URLs were incorrect, could we clarify:
+
+What specific URL was being tested back then?
+
+What change in the codebase occurred between April and May 6 that started using those DNS URLs?
+
+If the new DNS-based URL was already active in April, wouldn't the CSP error have shown up then?
+
+Since no errors were reported and everything worked until May 6, it seems the code may not have been using those DNS URLs until the recent deployment.
+
+Can we confirm when the switch to the DNS URL actually happened in the application code?
+
+During the April 4th email, while the URLs were again included, there was no indication that the CSP config needed review or that the /contactus path was an issue.
+
+Should we establish a practice going forward where any changes to URLs for iframe usage are explicitly flagged for CSP validation?
+
+My goal here is to ensure we have a shared understanding of what was implemented, tested, and confirmed back in April — and how it ties to the recent issues. I’m happy to collaborate on any process improvements that help make future changes smoother.
