@@ -41,3 +41,29 @@ Note: Do not proceed with changes unless approval is documented.
 	•	Modify the appropriate directive (connect-src, frame-src, etc.) by adding the new hostname or URL.
 
 Example (updating connect-src):
+
+4. Deploy and Publish New Version
+	•	After making code changes:
+	•	Click Deploy to apply changes.
+	•	Then select Actions → Publish new version.
+	•	Add a description including:
+	•	Jira Ticket ID
+	•	Summary of changes
+	•	Domains/URLs added
+
+⸻
+
+5. Update Lambda Version in CloudFront
+	•	Open the CloudFront distribution used for Bloomreach.
+	•	Go to the relevant Behavior settings.
+	•	In the Viewer Response section, update the Lambda function version to the newly published version.
+	•	Save the configuration.
+
+⸻
+
+Notes
+	•	CloudFront changes may take several minutes to propagate globally.
+	•	Ensure change documentation is attached to the Jira ticket for audit purposes.
+	•	Only approved and verified domains should be included in the CSP to prevent security risks.
+
+
