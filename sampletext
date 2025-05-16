@@ -1,0 +1,43 @@
+Here’s the updated Confluence page draft with an added InfoSec Approval section:
+
+⸻
+
+How to Update CSP for Bloomreach
+
+This document outlines the steps required to update the Content Security Policy (CSP) headers for the Bloomreach integration. The CSP is managed through a Lambda@Edge function that modifies HTTP headers returned from CloudFront.
+
+⸻
+
+Overview
+
+The CSP headers are controlled by the hsts-header-lambda function in the us-east-1 AWS region. This Lambda function is configured on the Viewer Response of the CloudFront distribution for Bloomreach and is responsible for applying security headers.
+
+⸻
+
+Steps to Update CSP
+
+1. Request InfoSec Approval
+
+Before adding any new hostname or URL to the CSP directives, obtain approval from the InfoSec team.
+Provide the following details in your request:
+	•	Purpose of the domain
+	•	Application name and owner
+	•	Associated Jira ticket
+	•	Type of directive (e.g., connect-src, frame-src, etc.)
+
+Note: Do not proceed with changes unless approval is documented.
+
+⸻
+
+2. Locate the Lambda Function
+	•	Go to the AWS Lambda Console in the us-east-1 region.
+	•	Search and open the Lambda function: hsts-header-lambda.
+
+⸻
+
+3. Update the CSP Header in Code
+	•	Navigate to the part of the code where response headers are set.
+	•	Locate the line defining the Content-Security-Policy header.
+	•	Modify the appropriate directive (connect-src, frame-src, etc.) by adding the new hostname or URL.
+
+Example (updating connect-src):
