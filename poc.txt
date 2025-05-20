@@ -1,0 +1,238 @@
+
+⸻
+
+CloudOps Chatbot – Proof of Concept (POC) Design
+
+⸻
+
+1. Objective
+
+This POC demonstrates a CloudOps AI Assistant that enables engineers to ask natural-language questions during incidents and receive accurate, context-based responses from operational playbooks and runbooks.
+
+The chatbot will:
+	•	Integrate with Microsoft Teams for interactive queries.
+	•	Use Amazon Bedrock and Claude for LLM-based responses.
+	•	Store playbooks in S3 for POC (will switch to Confluence in production).
+	•	Be fully AWS-native with no third-party services.
+
+⸻
+
+2. Architecture Overview
+
+POC (S3-based Knowledge Base)
+
+[Microsoft Teams]
+     |
+     v
+[Azure Bot Framework]
+     |
+     v
+[API Gateway (HTTP API)]
+     |
+     v
+[AWS Lambda (Query Handler)]
+     |
+     +--> [Titan Embeddings via Bedrock]
+     |
+     +--> [Amazon OpenSearch Serverless]
+     |
+     +--> [Claude 3 Haiku via Bedrock]
+     |
+     v
+[Answer Returned to Teams]
+
+3. Component Breakdown
+
+A. User Interface Layer
+
+Component
+Description
+Microsoft Teams
+Engineers ask natural-language questions.
+Azure Bot Framework
+Bridges Teams and AWS backend via HTTPS.
+API Gateway
+Secure HTTP endpoint that forwards to Lambda.
+
+B. Temporary Knowledge Base (POC)
+
+Component
+Description
+Amazon S3
+Stores operational playbooks in .md or .txt.
+S3 Structure
+Organized by service type, severity, or category.
+
+
+C. Embedding & Indexing Layer
+
+Component
+Description
+Lambda (Indexer)
+Reads files from S3 and creates vector embeddings.
+Bedrock – Titan Embeddings
+Converts text chunks into vectors.
+OpenSearch Serverless
+Stores vectors for semantic search.
+
+D. Retrieval & Answer Generation
+
+Component
+Description
+Lambda (Query Handler)
+Accepts question, retrieves matching context, and calls LLM.
+Bedrock – Claude 3 Haiku
+Generates clear, actionable answers.
+
+E. Logging & Observability
+
+Component
+Description
+CloudWatch
+Tracks Lambda execution, errors, logs.
+(Optional) S3 logging
+Logs unanswered queries for future ingestion.
+
+4. Workflow Breakdown
+
+Document Indexing
+
+[S3 Playbooks] → [Lambda Indexer] → [Titan Embeddings] → [OpenSearch]
+
+Query Handling
+[Teams] → [Bot Framework] → [API Gateway] → [Lambda Query Handler]
+          |
+          +--> Titan Embedding (for query)
+          +--> OpenSearch (context search)
+          +--> Claude 3 Haiku (answer generation)
+          |
+       [Response back to Teams]
+
+5. Knowledge Base Design (POC)
+
+S3 Folder Structure Example:
+
+s3://cloudops-poc-playbooks/
+├── ec2/
+│   └── ec2-restart.md
+├── lambda/
+│   └── timeout-troubleshoot.txt
+├── networking/
+│   └── sg-update-guide.md
+└── alerts/
+    └── cpu-spike-handling.md
+
+Each file = 1 operational use case or runbook.
+
+
+6. LangChain Consideration
+
+Current POC
+	•	LangChain is not used.
+	•	Entire pipeline is AWS-native and built using Python + boto3 + OpenSearch SDK + Bedrock APIs.
+
+Future Production (Confluence)
+
+LangChain may be introduced for:
+	•	Loading Confluence pages via ConfluenceLoader
+	•	Chunking documents
+	•	Embedding using Bedrock
+	•	Preparing metadata for OpenSearch
+
+This will only impact the indexing Lambda, not the retrieval or Teams-facing logic.
+
+Estimated transition effort: 3–4 days if ingestion logic is modular.
+
+⸻
+
+7. Transition to Production
+Element
+POC
+Production
+Knowledge Source
+S3
+Confluence (via LangChain or custom API)
+Bot Integration
+Public API Gateway
+Private API Gateway / EventBridge
+Embedding Source
+Markdown/Text
+HTML or rich content from Confluence
+Indexing Job
+On-demand Lambda
+Scheduled Lambda or ECS batch
+Retrieval Logic
+AWS-native Lambda
+Same
+Cost Monitoring
+Manual
+Integrated with CloudWatch Dashboards
+Security
+IAM Roles + Token Auth
+Fine-grained IAM + VPC Lambda (if needed)
+
+8. Cost Breakdown
+
+Category
+AWS Service
+POC Est. Monthly
+Production Est. Monthly
+Notes
+Document Storage
+Amazon S3
+<$1
+<$1
+Low-cost storage.
+Vector Search
+OpenSearch Serverless
+$45–55
+$70–120
+Scales with traffic and index size.
+Embedding Model
+Titan Embeddings
+$1–3
+$5–10
+Based on tokens embedded.
+LLM (Claude)
+Claude 3 Haiku
+$2–5
+$10–25
+Based on number of queries and response length.
+Lambda
+Indexer + Query
+<$1
+$3–5
+Cost scales by runtime duration.
+API Gateway
+HTTP API
+<$1
+$3–5
+Lower cost than REST API.
+CloudWatch
+Logging + Metrics
+$1–3
+$5–10
+For visibility and auditing.
+Teams Bot
+Azure Bot Framework
+Free
+Free
+External to AWS.
+
+
+POC Total: ~$50–65/month
+Production Total: ~$100–175/month
+
+9. Future Enhancements
+	•	Feedback collection from engineers (“Was this helpful?”)
+	•	Query re-ranking based on feedback and metadata
+	•	Multi-turn chat memory
+	•	Role-based document filtering
+	•	Fall back to real-time Confluence fetch if vector search fails
+
+
+
+
+
+
+
