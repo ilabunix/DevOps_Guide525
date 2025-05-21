@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudOps Chatbot POC – Full stack deployment
+
+Parameters:
+  ProjectPrefix:
+    Type: String
+    Default: cloudops-chatbot
+
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket where Lambda zip files are stored
+
+  IndexerZipKey:
+    Type: String
+    Description: S3 key for indexer.zip (e.g., lambda-code/indexer.zip)
+
+  QueryZipKey:
+    Type: String
+    Description: S3 key for query.zip (e.g., lambda-code/query.zip)
+
+  OpenSearchEndpoint:
+    Type: String
+    Description: OpenSearch endpoint URL (e.g., https://abc.region.aoss.amazonaws.com)
+
+  OpenSearchIndex:
+    Type: String
+    Default: cloudops-kb
+    Description: Index name for knowledge base in OpenSearch
+
+Resources:
+
+  # --- KMS Key ---
+  ChatbotKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key for encrypting chatbot data
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: RootAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: "*"
+
+  # --- S3 Bucket for Knowledge Base ---
+  KnowledgeBaseBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectPrefix}-kb-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+
+  # --- IAM Roles ---
+  IndexerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectPrefix}-indexer-role'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: indexer-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${ProjectPrefix}-kb-${AWS::AccountId}/*'
+              - Effect: Allow
+                Action: opensearch:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*'
+
+  QueryLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectPrefix}-query-role'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: query-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: '*'
+              - Effect: Allow
+                Action: opensearch:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*'
+
+  # --- Lambda Functions ---
+  IndexerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectPrefix}-indexer'
+      Role: !GetAtt IndexerLambdaRole.Arn
+      Runtime: python3.11
+      Handler: indexer.handler
+      Timeout: 60
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref IndexerZipKey
+      Environment:
+        Variables:
+          KB_BUCKET: !Ref KnowledgeBaseBucket
+          OPENSEARCH_ENDPOINT: !Ref OpenSearchEndpoint
+          OPENSEARCH_INDEX: !Ref OpenSearchIndex
+
+  QueryFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectPrefix}-query'
+      Role: !GetAtt QueryLambdaRole.Arn
+      Runtime: python3.11
+      Handler: query.handler
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref QueryZipKey
+      Environment:
+        Variables:
+          OPENSEARCH_ENDPOINT: !Ref OpenSearchEndpoint
+          OPENSEARCH_INDEX: !Ref OpenSearchIndex
+
+  # --- API Gateway ---
+  QueryAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub '${ProjectPrefix}-query-api'
+
+  QueryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref QueryAPI
+      ParentId: !GetAtt QueryAPI.RootResourceId
+      PathPart: query
+
+  QueryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref QueryAPI
+      ResourceId: !Ref QueryResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${QueryFunction.Arn}/invocations
+
+  # --- Lambda Permission for API Gateway ---
+  QueryLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref QueryFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${QueryAPI}/*/POST/query
+
+Outputs:
+  S3Bucket:
+    Description: S3 Bucket for knowledge base files
+    Value: !Ref KnowledgeBaseBucket
+
+  APIEndpoint:
+    Description: API Gateway endpoint to query chatbot
+    Value: !Sub 'https://${QueryAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/query'
