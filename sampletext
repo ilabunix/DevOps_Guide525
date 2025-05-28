@@ -1,0 +1,34 @@
+✅ Jira Story 1: Availability/Health Dashboard
+
+Summary:
+Implement and validate monitoring dashboard(s) for application health visibility.
+
+Description:
+To meet operational readiness standards, each application must have an associated health monitoring dashboard. This dashboard should provide visibility into key metrics such as availability, error rates, performance, and resource utilization. The goal is to enable real-time observability and proactive incident management by leveraging tools such as AWS CloudWatch, Dynatrace, Splunk, Grafana, or Omnibus.
+
+Acceptance Criteria:
+	•	A dashboard is created and configured for the application.
+	•	The dashboard includes critical KPIs such as uptime, latency, CPU usage, and error logs.
+	•	Default alert thresholds are defined and approved.
+	•	TechOps validates the dashboard for completeness and accuracy.
+	•	QE/Production Support is engaged for integration feedback.
+	•	A screenshot or accessible link to the dashboard is attached to this ticket.
+	•	Aligned with M4.3 milestone: End-to-End Testing Ecosystem.
+
+⸻
+
+✅ Jira Story 2: Operations Automation
+
+Summary:
+Enable operational automation for routine and user-initiated tasks.
+
+Description:
+Operational automation must be available for any repetitive or routine tasks performed by application or support teams. The automation should be accessible via approved tools/interfaces and must follow TechOps and FRS standards for validation, logging, and access control. Examples include automated service restarts, scaling activities, health checks, and diagnostic data collection.
+
+Acceptance Criteria:
+	•	A list of applicable automation use cases is documented.
+	•	Automation is implemented using approved platforms (e.g., AWS SSM, RunDeck, internal orchestration tools).
+	•	Execution logs and failure handling mechanisms are in place.
+	•	Reviewed and validated by FRS TechOps Automation team.
+	•	Automation access is limited to authorized roles.
+	•	Documentation or screenshots demonstrating the automation are attached to this ticket.
