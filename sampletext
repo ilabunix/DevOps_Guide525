@@ -1,0 +1,63 @@
+✅ ORC-50: Incident Response – Business Impact Documentation
+
+Summary:
+Ensure documentation exists for downstream business impact due to application failures or issues.
+
+Description:
+As a TechOps or Architecture team member, I want to confirm that the downstream impact of application failures is clearly documented and accessible, so that business stakeholders can understand potential disruptions and recovery expectations during incidents.
+
+Acceptance Criteria:
+	•	Documentation exists outlining downstream dependencies and potential business impact for application failure scenarios.
+	•	Incident runbooks include impact analysis and escalation workflows.
+	•	Reviewed and validated by TechOps and Architecture teams.
+	•	Documentation is shared with relevant stakeholders and referenced in this ticket for audit purposes.
+
+⸻
+
+✅ ORC-51: Incident Response – Automated Paging Setup
+
+Summary:
+Verify automated paging solution is configured and integrated with ServiceNow.
+
+Description:
+As a TechOps team member, I want to ensure that automated alerting and paging is configured through tools like xMatters or PagerDuty and integrated with ServiceNow, to allow seamless incident routing, notification, and resolution tracking.
+
+Acceptance Criteria:
+	•	Alerting solution is configured for critical events and failures.
+	•	Integration with ServiceNow is complete and tested.
+	•	Distribution lists or on-call rotations are set up.
+	•	Reviewed by Production Support and validated by QE and NIT.
+	•	Link or screenshot of alerting config is attached to this Jira ticket.
+
+⸻
+
+✅ ORC-52: Incident Response – MIR3 OnPage Access
+
+Summary:
+Ensure MIR3 (OnPage) access is granted and distributed to required users.
+
+Description:
+As a TechOps or NIT team member, I want to ensure that users who require access to MIR3/OnPage for escalations and incident communications have been provisioned and tested, and that escalation workflows are understood.
+
+Acceptance Criteria:
+	•	List of required users/groups is identified and access provisioned.
+	•	Access testing is completed and validated by NIT and TechOps.
+	•	Escalation procedures are documented and referenced.
+	•	Screenshot or access confirmation is attached to this Jira ticket.
+
+⸻
+
+✅ ORC-73: Shell Scripts Deployed for Users and Splunk
+
+Summary:
+Ensure TechOps-owned shell scripts are deployed for users and Splunk integrations.
+
+Description:
+As a TechOps team member, I want to confirm that all required shell scripts are deployed to user environments and Splunk data ingestion points, so that automation and logging tasks are consistently performed.
+
+Acceptance Criteria:
+	•	Shell scripts are deployed in production and tested.
+	•	Scripts are version-controlled and ownership is clearly defined.
+	•	Deployment paths and access permissions are documented.
+	•	Validation by Production Support/QE is complete.
+	•	Deployment evidence or script paths are attached to this Jira ticket.
