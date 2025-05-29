@@ -1,34 +1,13 @@
-✅ Jira Story 1: Availability/Health Dashboard
+While I understand that the subnets were expanded from /28 to /25 on your end, I’d like to clarify how this impacts us from the AWS side.
 
-Summary:
-Implement and validate monitoring dashboard(s) for application health visibility.
+In AWS WAF, IPSets must explicitly list the allowed IPs or CIDR ranges. The original /28 ranges (10.49.68.144/28 and 10.49.196.144/28) were previously added to the WAF IPSet, which allowed access from only those specific addresses.
 
-Description:
-To meet operational readiness standards, each application must have an associated health monitoring dashboard. This dashboard should provide visibility into key metrics such as availability, error rates, performance, and resource utilization. The goal is to enable real-time observability and proactive incident management by leveraging tools such as AWS CloudWatch, Dynatrace, Splunk, Grafana, or Omnibus.
+Now that the subnets have changed to:
+	•	10.49.68.128/25
+	•	10.49.196.128/25
 
-Acceptance Criteria:
-	•	A dashboard is created and configured for the application.
-	•	The dashboard includes critical KPIs such as uptime, latency, CPU usage, and error logs.
-	•	Default alert thresholds are defined and approved.
-	•	TechOps validates the dashboard for completeness and accuracy.
-	•	QE/Production Support is engaged for integration feedback.
-	•	A screenshot or accessible link to the dashboard is attached to this ticket.
-	•	Aligned with M4.3 milestone: End-to-End Testing Ecosystem.
+Any traffic originating from IPs outside the old /28 blocks but within the new /25 range will be blocked by WAF unless the new /25 CIDRs are explicitly added to the WAF IPSet.
 
-⸻
+So even though the range was expanded on your end, from the AWS WAF perspective, it doesn’t automatically accept the broader range unless we update it. That’s why previously working environments (like QA) are now blocked.
 
-✅ Jira Story 2: Operations Automation
-
-Summary:
-Enable operational automation for routine and user-initiated tasks.
-
-Description:
-Operational automation must be available for any repetitive or routine tasks performed by application or support teams. The automation should be accessible via approved tools/interfaces and must follow TechOps and FRS standards for validation, logging, and access control. Examples include automated service restarts, scaling activities, health checks, and diagnostic data collection.
-
-Acceptance Criteria:
-	•	A list of applicable automation use cases is documented.
-	•	Automation is implemented using approved platforms (e.g., AWS SSM, RunDeck, internal orchestration tools).
-	•	Execution logs and failure handling mechanisms are in place.
-	•	Reviewed and validated by FRS TechOps Automation team.
-	•	Automation access is limited to authorized roles.
-	•	Documentation or screenshots demonstrating the automation are attached to this ticket.
+We’ll proceed with updating the WAF IPSet to include the new /25 ranges.
