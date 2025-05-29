@@ -1,0 +1,196 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudOps Chatbot POC using Confluence + OpenSearch + Bedrock
+
+Parameters:
+  ConfluenceDomain:
+    Type: String
+    Description: Your Atlassian Confluence domain (e.g., yourcompany.atlassian.net)
+  ParentPageId:
+    Type: String
+    Description: Parent Page ID under which content should be crawled
+  BedrockModelId:
+    Type: String
+    Default: "anthropic.claude-v2"
+    Description: Bedrock model to use for generating answers
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket containing Lambda zip files
+  IndexerZipKey:
+    Type: String
+    Description: S3 key for the indexer lambda zip (e.g., confluence-indexer.zip)
+  QueryZipKey:
+    Type: String
+    Description: S3 key for the query lambda zip (e.g., query-handler.zip)
+
+Resources:
+
+  ConfluenceApiTokenSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: confluence-api-token
+      Description: Confluence API token for crawling pages
+
+  OpenSearchCollection:
+    Type: AWS::OpenSearchServerless::Collection
+    Properties:
+      Name: cloudops-chatbot-kb
+      Type: VECTORSEARCH
+      Description: Vector collection for chatbot search
+
+  IndexerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: IndexerLambdaPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref ConfluenceApiTokenSecret
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: "*"
+
+  IndexerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ConfluenceIndexer
+      Runtime: python3.12
+      Role: !GetAtt IndexerLambdaRole.Arn
+      Handler: indexer_lambda.handler
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref IndexerZipKey
+      Environment:
+        Variables:
+          CONFLUENCE_DOMAIN: !Ref ConfluenceDomain
+          CONFLUENCE_SECRET_NAME: !Ref ConfluenceApiTokenSecret
+          PARENT_PAGE_ID: !Ref ParentPageId
+          OPENSEARCH_COLLECTION_NAME: !GetAtt OpenSearchCollection.Name
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+
+  QueryLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: QueryLambdaPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: "*"
+
+  QueryLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ConfluenceQueryBot
+      Runtime: python3.12
+      Role: !GetAtt QueryLambdaRole.Arn
+      Handler: query_lambda.handler
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref QueryZipKey
+      Environment:
+        Variables:
+          OPENSEARCH_COLLECTION_NAME: !GetAtt OpenSearchCollection.Name
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: CloudOpsChatbotAPI
+
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: chatbot
+
+  ApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - Region: !Ref "AWS::Region"
+            LambdaArn: !GetAtt QueryLambda.Arn
+
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref QueryLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/chatbot
+
+Outputs:
+  ApiEndpoint:
+    Description: Endpoint for the chatbot API
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/chatbot
+
+
+  IndexerScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: ConfluenceIndexerSchedule
+      Description: Run indexer lambda every 12 hours
+      ScheduleExpression: rate(12 hours)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt IndexerLambda.Arn
+          Id: TargetFunctionV1
+
+  PermissionForEventsToInvokeIndexer:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref IndexerLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt IndexerScheduleRule.Arn
