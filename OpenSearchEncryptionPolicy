@@ -1,0 +1,17 @@
+OpenSearchEncryptionPolicy:
+  Type: AWS::OpenSearchServerless::SecurityPolicy
+  Properties:
+    Name: oss-encryption-policy
+    Type: encryption
+    Policy: !Sub |
+      {
+        "Rules": [
+          {
+            "ResourceType": "collection",
+            "Resource": [
+              "collection/cloudops-chatbot-kb"
+            ]
+          }
+        ],
+        "AWSOwnedKey": true
+      }
