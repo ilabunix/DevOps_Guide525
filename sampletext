@@ -1,0 +1,3 @@
+The main Grafana dashboard (Single Pane View) isn’t fully automated yet because it needs to be customized per application based on the core services involved. Embedded TechOps team members are currently tailoring the dashboards using the shared sample and adding their updates directly in Grafana.
+
+These customizations can also be captured in JSON files and incorporated into the Terraform module for automation. I have a few module updates planned for the upcoming sprint to support this approach, and I’ll update the project accordingly once those are in place.
