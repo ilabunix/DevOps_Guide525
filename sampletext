@@ -1,5 +1,10 @@
-Thanks for your response and for confirming DMT readiness.
+mkdir python
 
-To clarify, the mention of ORC was in the context of your request for PROD deployment dates. While ORC is not required for UAT, it must be completed before we can proceed with any production changes, including CSP updates, as part of CloudOps’ operational readiness process.
+# Install exact Git commit for 0.0.319 to avoid PyPI contamination
+/usr/local/bin/pip3.12 install --no-cache-dir --no-deps \
+  git+https://github.com/langchain-ai/langchain.git@cb8d32de02b47c77109c9a4640e3d4931906c7ca \
+  -t python
 
-Regarding the security sign-off for adding new domains to the Bloomreach CSP — this is part of our standard process and not a new requirement. Any external domains added to CSP must go through InfoSec review, particularly for PROD. For Bloomreach, Bill Burn from the InfoSec team is the primary contact. If this has already been discussed with him, we just need a reference to that approval (email, Jira, or meeting note) for documentation.
+# Install the rest
+/usr/local/bin/pip3.12 install --no-cache-dir \
+  pydantic==1.10.13 boto3 requests opensearch-py urllib3 -t python
