@@ -1,10 +1,4 @@
-mkdir python
-
-# Install exact Git commit for 0.0.319 to avoid PyPI contamination
-/usr/local/bin/pip3.12 install --no-cache-dir --no-deps \
-  git+https://github.com/langchain-ai/langchain.git@cb8d32de02b47c77109c9a4640e3d4931906c7ca \
-  -t python
-
-# Install the rest
-/usr/local/bin/pip3.12 install --no-cache-dir \
-  pydantic==1.10.13 boto3 requests opensearch-py urllib3 -t python
+curl -XPUT "https://cloudops-chatbot-kb-xxxxxxxxx.us-west-2.aoss.amazonaws.com/confluence-pages" \
+     -H "Content-Type: application/json" \
+     --aws-sigv4 "aws:amz:us-west-2:aoss" \
+     -d @vector-index.json
