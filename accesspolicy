@@ -1,0 +1,22 @@
+{
+  "Rules": [
+    {
+      "ResourceType": "index",
+      "Resource": ["index/confluence-pages"],  // match your config.py index
+      "Permission": [
+        "aoss:CreateIndex",
+        "aoss:WriteDocument"
+      ]
+    },
+    {
+      "ResourceType": "collection",
+      "Resource": ["collection/your-collection-name"],
+      "Permission": [
+        "aoss:DescribeCollection"
+      ]
+    }
+  ],
+  "Principal": [
+    "arn:aws:iam::123456789012:role/service-role/ConfluenceIndexerRole-xxxxx"
+  ]
+}
