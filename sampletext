@@ -1,4 +1,32 @@
-curl -XPUT "https://cloudops-chatbot-kb-xxxxxxxxx.us-west-2.aoss.amazonaws.com/confluence-pages" \
-     -H "Content-Type: application/json" \
-     --aws-sigv4 "aws:amz:us-west-2:aoss" \
-     -d @vector-index.json
+{
+  "Rules": [
+    {
+      "ResourceType": "collection",
+      "Resource": ["collection/cloudops-chatbot-kb"],
+      "Permission": [
+        "aoss:CreateCollectionItems",
+        "aoss:DeleteCollectionItems",
+        "aoss:UpdateCollectionItems",
+        "aoss:DescribeCollectionItems"
+      ]
+    },
+    {
+      "ResourceType": "index",
+      "Resource": ["index/cloudops-chatbot-kb/confluence-pages"],
+      "Permission": [
+        "aoss:CreateIndex",
+        "aoss:DeleteIndex",
+        "aoss:UpdateIndex",
+        "aoss:DescribeIndex",
+        "aoss:ReadDocument",
+        "aoss:WriteDocument"
+      ]
+    }
+  ],
+  "Principal": [
+    "arn:aws:iam::615299738349:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_b4d07f22d981de82",
+    "arn:aws:iam::615299738349:role/CloudOpsChatbotPOC-IndexerLambdaRole-QaymWh7Ec9Eb",
+    "arn:aws:sts::615299738349:assumed-role/AWSReservedSSO_AdministratorAccess_b4d07f22d981de82/irshad.mohammed@chi.frb.org"
+  ],
+  "Description": "Easy data policy"
+}
