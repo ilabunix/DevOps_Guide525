@@ -1,0 +1,24 @@
+curl -XPUT "https://search-cloudops-chatbot-xyz123.us-west-2.es.amazonaws.com/confluence-pages" \
+  -H "Content-Type: application/json" \
+  -u admin:YourSecurePassword123 \
+  -d '{
+    "settings": {
+      "index": {
+        "knn": true
+      }
+    },
+    "mappings": {
+      "properties": {
+        "title": { "type": "text" },
+        "content": { "type": "text" },
+        "embedding": {
+          "type": "knn_vector",
+          "dimension": 1536,
+          "method": {
+            "name": "hnsw",
+            "space_type": "cosinesimil"
+          }
+        }
+      }
+    }
+  }'
