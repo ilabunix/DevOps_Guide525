@@ -1,24 +1,18 @@
-curl -XPUT "https://search-cloudops-chatbot-xyz123.us-west-2.es.amazonaws.com/confluence-pages" \
-  -H "Content-Type: application/json" \
-  -u admin:YourSecurePassword123 \
-  -d '{
-    "settings": {
-      "index": {
-        "knn": true
-      }
-    },
-    "mappings": {
-      "properties": {
-        "title": { "type": "text" },
-        "content": { "type": "text" },
-        "embedding": {
-          "type": "knn_vector",
-          "dimension": 1536,
-          "method": {
-            "name": "hnsw",
-            "space_type": "cosinesimil"
-          }
-        }
-      }
+import boto3
+
+def get_titan_embedding(text):
+    bedrock = boto3.client("bedrock-runtime")
+    
+    payload = {
+        "inputText": text
     }
-  }'
+
+    response = bedrock.invoke_model(
+        modelId="amazon.titan-embed-text-v1",
+        contentType="application/json",
+        accept="application/json",
+        body=json.dumps(payload)
+    )
+
+    response_body = json.loads(response['body'].read())
+    return response_body['embedding']
