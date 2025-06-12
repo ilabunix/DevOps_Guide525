@@ -1,16 +1,5 @@
-def index_document(doc):
-    headers = { "Content-Type": "application/json" }
-
-    # Cast embedding to float (float32)
-    if "embedding" in doc:
-        doc["embedding"] = [float(x) for x in doc["embedding"]]
-
-    res = requests.put(
-        f"{OPENSEARCH_ENDPOINT}/{OPENSEARCH_INDEX}/_doc/{doc['id']}",
-        headers=headers,
-        data=json.dumps(doc),
-        auth=None  # Add AWS4Auth if using IAM auth
-    )
-
-    if res.status_code not in [200, 201]:
-        print("Failed to index:", res.text)
+if "embedding" in doc:
+    print("🔍 Type of embedding:", type(doc["embedding"]))
+    print("🔢 Sample values:", doc["embedding"][:5])
+    print("📏 Length:", len(doc["embedding"]))
+    doc["embedding"] = [float(x) for x in doc["embedding"]]
