@@ -1,5 +1,16 @@
 if "embedding" in doc:
-    print("🔍 Type of embedding:", type(doc["embedding"]))
-    print("🔢 Sample values:", doc["embedding"][:5])
-    print("📏 Length:", len(doc["embedding"]))
-    doc["embedding"] = [float(x) for x in doc["embedding"]]
+    embedding = doc["embedding"]
+
+    # Ensure it's a list
+    if not isinstance(embedding, list):
+        print(f"⛔ Skipping document {doc['id']}: embedding is not a list")
+        return
+
+    # Normalize to 1536 dims
+    if len(embedding) < 1536:
+        embedding += [0.0] * (1536 - len(embedding))  # Pad
+    elif len(embedding) > 1536:
+        embedding = embedding[:1536]  # Truncate
+
+    # Cast to float32
+    doc["embedding"] = [float(x) for x in embedding]
