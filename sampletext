@@ -1,18 +1,16 @@
-import boto3
+def index_document(doc):
+    headers = { "Content-Type": "application/json" }
 
-def get_titan_embedding(text):
-    bedrock = boto3.client("bedrock-runtime")
-    
-    payload = {
-        "inputText": text
-    }
+    # Cast embedding to float (float32)
+    if "embedding" in doc:
+        doc["embedding"] = [float(x) for x in doc["embedding"]]
 
-    response = bedrock.invoke_model(
-        modelId="amazon.titan-embed-text-v1",
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps(payload)
+    res = requests.put(
+        f"{OPENSEARCH_ENDPOINT}/{OPENSEARCH_INDEX}/_doc/{doc['id']}",
+        headers=headers,
+        data=json.dumps(doc),
+        auth=None  # Add AWS4Auth if using IAM auth
     )
 
-    response_body = json.loads(response['body'].read())
-    return response_body['embedding']
+    if res.status_code not in [200, 201]:
+        print("Failed to index:", res.text)
