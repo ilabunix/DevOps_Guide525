@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CloudOps Chatbot</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; max-width: 600px; margin: auto; }
+    textarea { width: 100%; height: 100px; }
+    button { padding: 0.5rem 1rem; margin-top: 1rem; }
+    pre { background: #f0f0f0; padding: 1rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Ask CloudOps Assistant</h2>
+  <textarea id="query" placeholder="Enter your question..."></textarea>
+  <br>
+  <button onclick="askBot()">Ask</button>
+  <pre id="responseBox">Response will appear here...</pre>
+
+  <script>
+    async function askBot() {
+      const query = document.getElementById('query').value;
+      const responseBox = document.getElementById('responseBox');
+      responseBox.textContent = 'Waiting for response...';
+
+      const res = await fetch('https://<YOUR_API_GATEWAY_ID>.execute-api.<REGION>.amazonaws.com/prod/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await res.json();
+      responseBox.textContent = data.answer || JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
