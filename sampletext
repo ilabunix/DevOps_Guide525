@@ -1,16 +1,12 @@
-if "embedding" in doc:
-    embedding = doc["embedding"]
-
-    # Ensure it's a list
-    if not isinstance(embedding, list):
-        print(f"⛔ Skipping document {doc['id']}: embedding is not a list")
-        return
-
-    # Normalize to 1536 dims
-    if len(embedding) < 1536:
-        embedding += [0.0] * (1536 - len(embedding))  # Pad
-    elif len(embedding) > 1536:
-        embedding = embedding[:1536]  # Truncate
-
-    # Cast to float32
-    doc["embedding"] = [float(x) for x in embedding]
+bedrock_response = bedrock.invoke_model(
+    modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+    contentType="application/json",
+    accept="application/json",
+    body=json.dumps({
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+            { "role": "user", "content": prompt }
+        ],
+        "max_tokens": 500
+    })
+)
