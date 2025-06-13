@@ -1,12 +1,33 @@
-bedrock_response = bedrock.invoke_model(
-    modelId="anthropic.claude-3-sonnet-20240229-v1:0",
-    contentType="application/json",
-    accept="application/json",
-    body=json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "messages": [
-            { "role": "user", "content": prompt }
-        ],
-        "max_tokens": 500
-    })
-)
+<script>
+  async function askBot() {
+    const queryInput = document.getElementById('query');
+    const responseBox = document.getElementById('responseBox');
+    const query = queryInput.value.trim();
+
+    if (!query) {
+      responseBox.textContent = "Please enter a question.";
+      return;
+    }
+
+    responseBox.textContent = "Waiting for response...";
+
+    try {
+      const res = await fetch('https://3vdty0ekf8.execute-api.us-west-2.amazonaws.com/prod/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        responseBox.textContent = `Error: ${res.status} - ${err}`;
+        return;
+      }
+
+      const data = await res.json();
+      responseBox.textContent = data.answer || JSON.stringify(data, null, 2);
+    } catch (error) {
+      responseBox.textContent = `Error: ${error.message}`;
+    }
+  }
+</script>
