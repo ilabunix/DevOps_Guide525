@@ -1,7 +1,8 @@
-if (typeof data.answer === "string") {
-  responseBox.textContent = data.answer;
-} else if (typeof data === "object") {
-  responseBox.textContent = JSON.stringify(data, null, 2);
+if (data.answer && Array.isArray(data.answer)) {
+  const messages = data.answer.map(item => item.text || item.content || JSON.stringify(item)).join("\n\n");
+  responseBox.innerHTML = `<div style="white-space: pre-wrap;">${messages}</div>`;
+} else if (typeof data.answer === "string") {
+  responseBox.innerHTML = `<div style="white-space: pre-wrap;">${data.answer}</div>`;
 } else {
-  responseBox.textContent = "Unexpected response format.";
+  responseBox.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
