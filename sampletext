@@ -1,204 +1,126 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ask Clara – Your CloudOps Assistant</title>
-  <style>
-    :root {
-      --bg-light: #f9fafb;
-      --bg-dark: #1f1f1f;
-      --text-light: #333;
-      --text-dark: #f0f0f0;
-      --card-light: #ffffff;
-      --card-dark: #2c2c2c;
-      --user-msg: #e3f2fd;
-      --bot-msg: #fffde7;
-    }
-    [data-theme="light"] {
-      --bg: var(--bg-light);
-      --text: var(--text-light);
-      --card: var(--card-light);
-    }
-    [data-theme="dark"] {
-      --bg: var(--bg-dark);
-      --text: var(--text-dark);
-      --card: var(--card-dark);
-    }
+<style>
+  :root {
+    --bg-light: #f4f6fb;
+    --bg-dark: #1e1e2f;
+    --text-light: #2a2a2a;
+    --text-dark: #e5e5e5;
+    --card-light: #ffffff;
+    --card-dark: #2b2c3a;
+    --user-msg: #dbeafe;      /* Light blue for user */
+    --bot-msg: #fef9c3;       /* Soft yellow for Clara */
+    --accent: #4f46e5;        /* Indigo for buttons */
+    --accent-hover: #4338ca;
+  }
 
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 2rem;
-      transition: all 0.3s ease;
-    }
+  [data-theme="light"] {
+    --bg: var(--bg-light);
+    --text: var(--text-light);
+    --card: var(--card-light);
+  }
 
-    .chat-container {
-      width: 100%;
-      max-width: 750px;
-      background: var(--card);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-    }
+  [data-theme="dark"] {
+    --bg: var(--bg-dark);
+    --text: var(--text-dark);
+    --card: var(--card-dark);
+  }
 
-    h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    transition: all 0.3s ease;
+  }
 
-    .tagline {
-      font-size: 0.95rem;
-      color: gray;
-      margin-bottom: 1.5rem;
-    }
+  .chat-container {
+    width: 100%;
+    max-width: 750px;
+    background: var(--card);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
 
-    .chat-history {
-      max-height: 350px;
-      overflow-y: auto;
-      padding: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: #f8f9fa;
-      margin-bottom: 1rem;
-    }
+  h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-    .bubble {
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
+  .tagline {
+    font-size: 0.95rem;
+    color: gray;
+    margin-bottom: 1.5rem;
+  }
 
-    .user {
-      background-color: var(--user-msg);
-      text-align: right;
-    }
+  .chat-history {
+    max-height: 350px;
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8faff;
+    margin-bottom: 1rem;
+  }
 
-    .bot {
-      background-color: var(--bot-msg);
-      border-left: 4px solid #ffeb3b;
-    }
+  .bubble {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    white-space: pre-wrap;
+  }
 
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      resize: vertical;
-    }
+  .user {
+    background-color: var(--user-msg);
+    text-align: right;
+  }
 
-    button {
-      margin-top: 1rem;
-      padding: 0.7rem 1.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
+  .bot {
+    background-color: var(--bot-msg);
+    border-left: 4px solid #facc15;
+  }
 
-    button:hover {
-      background-color: #0056b3;
-    }
+  textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    resize: vertical;
+  }
 
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-    }
+  button {
+    margin-top: 1rem;
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
 
-    .dark-mode-toggle {
-      font-size: 0.9rem;
-    }
+  button:hover {
+    background-color: var(--accent-hover);
+  }
 
-    .dark-mode-toggle input {
-      margin-right: 0.5rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="chat-container">
-    <h1>🤖 Ask Clara – Your CloudOps Assistant</h1>
-    <div class="tagline">From chaos to clarity — with Clara™</div>
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
 
-    <div class="chat-history" id="chatHistory">
-      <div class="bubble bot">💬 Clara is ready to help you!</div>
-    </div>
+  .dark-mode-toggle {
+    font-size: 0.9rem;
+  }
 
-    <textarea id="query" placeholder="Enter your question here..."></textarea>
-    <button onclick="askBot()">Ask</button>
-
-    <div class="footer">
-      <div class="dark-mode-toggle">
-        <label><input type="checkbox" id="themeToggle" /> Dark Mode</label>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const queryInput = document.getElementById("query");
-    const chatHistory = document.getElementById("chatHistory");
-    const themeToggle = document.getElementById("themeToggle");
-
-    async function askBot() {
-      const query = queryInput.value.trim();
-      if (!query) return;
-
-      addMessage(query, 'user');
-      queryInput.value = '';
-
-      const thinkingMsg = addMessage('🧠 Clara is thinking...', 'bot');
-
-      try {
-        const res = await fetch("https://3vdty0ekf8.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query })
-        });
-
-        const data = await res.json();
-        const answer = Array.isArray(data.answer)
-          ? data.answer.map(item => item.text || item.content || '').join("\n\n")
-          : data.answer || "🤖 Clara couldn't find an answer.";
-
-        thinkingMsg.remove();
-        addMessage(`💡 Clara says:\n\n${answer}`, 'bot');
-      } catch (err) {
-        thinkingMsg.remove();
-        addMessage(`❌ Error: ${err.message}`, 'bot');
-      }
-    }
-
-    function addMessage(text, type) {
-      const div = document.createElement("div");
-      div.className = `bubble ${type}`;
-      div.textContent = text;
-      chatHistory.appendChild(div);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-      return div;
-    }
-
-    queryInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        askBot();
-      }
-    });
-
-    themeToggle.addEventListener("change", function () {
-      document.documentElement.setAttribute("data-theme", this.checked ? "dark" : "light");
-    });
-  </script>
-</body>
-</html>
+  .dark-mode-toggle input {
+    margin-right: 0.5rem;
+  }
+</style>
