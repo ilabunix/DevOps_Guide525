@@ -1,8 +1,8 @@
 <script>
   async function askBot() {
     const queryInput = document.getElementById('query');
-    const responseBox = document.getElementById('responseBox');
     const query = queryInput.value.trim();
+    const responseBox = document.getElementById('responseBox');
 
     if (!query) {
       responseBox.textContent = "Please enter a question.";
@@ -14,20 +14,22 @@
     try {
       const res = await fetch('https://3vdty0ekf8.execute-api.us-west-2.amazonaws.com/prod/chatbot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })  // Make sure key is 'query'
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.text();
-        responseBox.textContent = `Error: ${res.status} - ${err}`;
-        return;
+        responseBox.textContent = `Error: ${res.status} - ${JSON.stringify(data)}`;
+      } else {
+        responseBox.textContent = data.answer || JSON.stringify(data, null, 2);
       }
 
-      const data = await res.json();
-      responseBox.textContent = data.answer || JSON.stringify(data, null, 2);
     } catch (error) {
-      responseBox.textContent = `Error: ${error.message}`;
+      responseBox.textContent = `Request failed: ${error.message}`;
     }
   }
 </script>
