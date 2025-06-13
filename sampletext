@@ -1,0 +1,20 @@
+CloudOps Chatbot Update – Ask Clara is Now Live! 🚀
+
+We’ve now completed the frontend implementation for Ask Clara – A GenAI Assistant for Smarter Operations. The UI is fully functional and integrated with the backend, allowing users to interact with Clara in a clean, intuitive chat interface.
+
+✅ What’s working:
+	•	Users can now type questions directly into the frontend UI.
+	•	Clara responds with clear, step-by-step resolutions pulled from indexed Confluence playbooks via OpenSearch vector search.
+	•	The chatbot flow feels native and aligns with how Ops engineers would expect to get guided assistance.
+
+💡 Example:
+Users can ask things like:
+
+“How to analyze VPC flow logs?”
+“What should I do if my AWS credentials are compromised?”
+…and Clara will respond with structured instructions sourced from operational documentation.
+
+🛠️ Tech Notes:
+	•	Frontend is hosted and connected to the backend API Gateway.
+	•	Uses Bedrock Claude for LLM processing and Titan for vector embeddings.
+	•	All indexing and query Lambda functions have been refactored to remove LangChain dependencies.
