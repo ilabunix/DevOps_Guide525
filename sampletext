@@ -1,8 +1,81 @@
-if (data.answer && Array.isArray(data.answer)) {
-  const messages = data.answer.map(item => item.text || item.content || JSON.stringify(item)).join("\n\n");
-  responseBox.innerHTML = `<div style="white-space: pre-wrap;">${messages}</div>`;
-} else if (typeof data.answer === "string") {
-  responseBox.innerHTML = `<div style="white-space: pre-wrap;">${data.answer}</div>`;
-} else {
-  responseBox.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CloudOps Chatbot</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      background: #0f0f0f;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #responseBox {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>Ask CloudOps Assistant</h2>
+  <textarea id="query" placeholder="Enter your question..."></textarea><br>
+  <button onclick="askBot()">Ask</button>
+  <div id="responseBox">Response will appear here...</div>
+
+  <script>
+    async function askBot() {
+      const queryInput = document.getElementById('query');
+      const query = queryInput.value.trim();
+      const responseBox = document.getElementById('responseBox');
+
+      if (!query) {
+        responseBox.textContent = "Please enter a question.";
+        return;
+      }
+
+      responseBox.textContent = "Waiting for response...";
+
+      try {
+        const res = await fetch('https://3vdty0ekf8.execute-api.us-west-2.amazonaws.com/prod/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+
+        const data = await res.json();
+
+        const answer = typeof data.answer === "string"
+          ? data.answer
+          : JSON.stringify(data.answer, null, 2);
+
+        const sources = data.matches && data.matches.length > 0
+          ? `
+            <details style="margin-top:1rem;">
+              <summary style="cursor:pointer;font-weight:bold;">Show Retrieved Chunks</summary>
+              <pre style="white-space:pre-wrap;margin-top:0.5rem;">${data.matches.join("\n\n")}</pre>
+            </details>`
+          : "";
+
+        responseBox.innerHTML = `
+          <div style="background:#f9f9f9;border:1px solid #ddd;padding:1rem;border-radius:6px;white-space:pre-wrap;">
+            ${answer}
+          </div>
+          ${sources}
+        `;
+      } catch (error) {
+        responseBox.textContent = `Request failed: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
