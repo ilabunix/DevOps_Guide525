@@ -3,173 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clara – Your CloudOps Assistant</title>
+  <title>Ask Clara – Your CloudOps Assistant</title>
   <style>
     :root {
-      --bg-color: #f7f9fb;
+      --bg-color: #f4f6f8;
       --text-color: #222;
-      --chat-bg: #fff;
-      --bubble-bg: #eef6fc;
-      --accent-color: #007bff;
+      --card-bg: #ffffff;
+      --bot-bubble: #fffde7;
+      --user-bubble: #e3f2fd;
+      --font: 'Segoe UI', sans-serif;
     }
-
-    body.dark {
-      --bg-color: #121212;
-      --text-color: #eee;
-      --chat-bg: #1f1f1f;
-      --bubble-bg: #2a2a2a;
-      --accent-color: #90caf9;
+    [data-theme="dark"] {
+      --bg-color: #1e1e1e;
+      --text-color: #eaeaea;
+      --card-bg: #2a2a2a;
+      --bot-bubble: #33383b;
+      --user-bubble: #3a4854;
     }
-
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: var(--font);
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
-      padding: 1rem;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: background-color 0.3s ease;
     }
-
-    .container {
+    .chat-wrapper {
       width: 100%;
-      max-width: 800px;
-      background: var(--chat-bg);
-      border-radius: 10px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      max-width: 750px;
+      background: var(--card-bg);
       padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
     }
-
     h1 {
       margin-top: 0;
-      font-size: 1.8rem;
-      text-align: center;
-    }
-
-    .tagline {
-      font-size: 0.95rem;
-      color: var(--text-color);
-      text-align: center;
-      margin-bottom: 1rem;
-      opacity: 0.7;
-    }
-
-    .chat-box {
-      max-height: 400px;
-      overflow-y: auto;
-      padding: 0.5rem;
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      border-top: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
-      margin-bottom: 1rem;
-    }
-
-    .message {
-      background: var(--bubble-bg);
-      padding: 1rem;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-
-    .user-msg {
-      align-self: flex-end;
-      background: #d0ebff;
-      color: #003366;
-    }
-
-    .clara-msg {
-      align-self: flex-start;
-      border-left: 4px solid var(--accent-color);
-    }
-
-    .query-area {
-      display: flex;
-      flex-direction: column;
+      align-items: center;
+      font-size: 1.5rem;
       gap: 0.5rem;
     }
-
+    .tagline {
+      font-size: 0.9rem;
+      color: gray;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
     textarea {
       width: 100%;
-      height: 80px;
       padding: 0.75rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
       border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
       resize: vertical;
+      background: var(--card-bg);
+      color: var(--text-color);
     }
-
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
     button {
-      background: var(--accent-color);
+      background-color: #007bff;
       color: white;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
       border: none;
-      padding: 0.5rem 1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
+      margin-top: 0.5rem;
     }
-
-    .dark-toggle {
-      font-size: 0.9rem;
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+    .bubble {
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      white-space: pre-wrap;
+    }
+    .bot {
+      background-color: var(--bot-bubble);
+      border-left: 5px solid #ffeb3b;
+    }
+    .user {
+      background-color: var(--user-bubble);
+      text-align: right;
+    }
+    .toggle-container {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .clara-avatar {
+      height: 28px;
+      vertical-align: middle;
     }
   </style>
 </head>
-<body>
-  <div class="container">
+<body data-theme="light">
+  <div class="chat-wrapper">
     <h1>🤖 Ask Clara – Your CloudOps Assistant</h1>
-    <div class="tagline">From chaos to clarity — with Clara.</div>
+    <div class="tagline">From chaos to clarity — with Clara™.</div>
 
-    <div class="chat-box" id="chatBox">
-      <div class="message clara-msg">💬 Clara is ready to help you!</div>
+    <div class="chat-history" id="chatHistory">
+      <div class="bubble bot">💬 Clara is ready to help you!</div>
     </div>
 
-    <div class="query-area">
-      <textarea id="query" placeholder="Enter your question here..."></textarea>
-      <div class="actions">
-        <button onclick="askBot()">Ask</button>
-        <label class="dark-toggle">
-          <input type="checkbox" id="darkModeToggle"> Dark Mode
-        </label>
-      </div>
+    <textarea id="query" placeholder="Enter your question here..."></textarea>
+    <button onclick="askBot()">Ask</button>
+
+    <div class="toggle-container">
+      <label>
+        <input type="checkbox" id="darkModeToggle" /> Dark Mode
+      </label>
     </div>
   </div>
 
   <script>
     const queryInput = document.getElementById("query");
-    const chatBox = document.getElementById("chatBox");
-    const toggle = document.getElementById("darkModeToggle");
-
-    toggle.addEventListener("change", () => {
-      document.body.classList.toggle("dark", toggle.checked);
-    });
+    const chatHistory = document.getElementById("chatHistory");
+    const darkModeToggle = document.getElementById("darkModeToggle");
 
     async function askBot() {
       const query = queryInput.value.trim();
       if (!query) return;
 
-      // Add user question
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user-msg";
-      userMsg.textContent = query;
-      chatBox.appendChild(userMsg);
-
-      // Show thinking...
-      const thinkingMsg = document.createElement("div");
-      thinkingMsg.className = "message clara-msg";
-      thinkingMsg.textContent = "🧠 Clara is thinking...";
-      chatBox.appendChild(thinkingMsg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      addMessage(query, 'user');
+      queryInput.value = '';
+      addMessage('🧠 Clara is thinking...', 'bot');
 
       try {
         const res = await fetch("https://3vdty0ekf8.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
@@ -179,19 +143,32 @@
         });
 
         const data = await res.json();
-        const answer = Array.isArray(data.answer)
+        const messages = Array.isArray(data.answer)
           ? data.answer.map(item => item.text || item.content || "").join("\n\n")
-          : data.answer || "🤖 No answer generated.";
+          : data.answer || "🤖 Clara had trouble answering that.";
 
-        // Replace thinking with real response
-        thinkingMsg.textContent = `💡 Clara says:\n\n${answer}`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-      } catch (error) {
-        thinkingMsg.textContent = `❌ Error: ${error.message}`;
+        removeThinking();
+        addMessage(`💡 Clara says:\n\n${messages}`, 'bot');
+      } catch (err) {
+        removeThinking();
+        addMessage(`❌ Clara encountered an error: ${err.message}`, 'bot');
       }
+    }
 
-      queryInput.value = "";
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `bubble ${sender}`;
+      div.textContent = text;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function removeThinking() {
+      const bubbles = document.querySelectorAll('.bubble.bot');
+      const last = bubbles[bubbles.length - 1];
+      if (last && last.textContent.includes("Clara is thinking")) {
+        last.remove();
+      }
     }
 
     queryInput.addEventListener("keypress", function (e) {
@@ -199,6 +176,10 @@
         e.preventDefault();
         askBot();
       }
+    });
+
+    darkModeToggle.addEventListener("change", () => {
+      document.body.setAttribute("data-theme", darkModeToggle.checked ? "dark" : "light");
     });
   </script>
 </body>
