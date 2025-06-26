@@ -1,0 +1,150 @@
+📘 CloudOps Chatbot – Proof of Concept (POC) Design (Updated)
+
+Objective
+
+Build a GenAI-powered CloudOps Assistant that enables engineers to ask natural language questions during incidents and receive context-aware responses from operational playbooks stored in Confluence.
+
+The POC:
+	•	Integrates with a web UI and optionally Microsoft Teams
+	•	Uses Claude 3 Sonnet (via Amazon Bedrock) for answer generation
+	•	Embeds documents using Titan Embeddings
+	•	Stores vector data in provisioned Amazon OpenSearch
+	•	Indexes content from Confluence on a scheduled basis using Lambda
+	•	Is fully AWS-native
+
+⸻
+
+1. ⚙️ Architecture Overview
+
+[User Web UI or Teams]
+        ↓
+    [API Gateway (HTTP API)]
+        ↓
+  [Query Handler Lambda Function]
+        ↓
+ ┌──────────────────────────────┐
+ │ Titan Embeddings (Bedrock)  │
+ │ Amazon OpenSearch (Provisioned) │
+ │ Claude 3 Sonnet (Bedrock)   │
+ └──────────────────────────────┘
+        ↑
+[Scheduled Indexer Lambda Function]
+        ↑
+ [Confluence API Integration]
+
+2. 🧩 Component Breakdown
+Layer
+Component
+Description
+User Interface
+Custom HTML Web UI / Teams
+Chat interface for asking questions
+API Gateway (HTTP)
+Routes questions to Lambda
+Knowledge Source
+Confluence API
+Fetches playbook pages from Confluence
+Indexing (Scheduled)
+Lambda (Indexer)
+Parses Confluence pages and updates OpenSearch twice daily
+Titan Embeddings
+Converts text into vectors
+Amazon OpenSearch
+Stores embeddings for semantic search
+Query & Retrieval
+Lambda (Query)
+Accepts queries, retrieves context from OpenSearch
+Claude 3 Sonnet
+Generates structured response using context
+Logging & Monitoring
+CloudWatch
+Logs Lambda execution, errors, performance
+(Optional) S3
+Stores logs or unanswered questions (future feature)
+
+
+3. 🔄 Workflow Breakdown
+
+Document Indexing (Scheduled – e.g., every 12 hrs)
+
+[Confluence API Pages] 
+      ↓
+[Indexer Lambda (Scheduled)]
+      ↓
+[Titan Embeddings via Bedrock]
+      ↓
+[Provisioned Amazon OpenSearch]
+
+Query Flow (Real-time)
+
+[User via Web UI or Teams]
+      ↓
+[API Gateway]
+      ↓
+[Query Handler Lambda]
+      ↓
+→ Titan (embedding query)
+→ OpenSearch (vector search)
+→ Claude 3 Sonnet (response generation)
+      ↓
+[Structured Answer Returned]
+
+4. 🔐 IAM & Security
+
+Component
+IAM Role Summary
+Indexer Lambda
+Scoped role to access Confluence API and Bedrock
+Query Lambda
+Access to Bedrock (Titan, Claude) and OpenSearch
+Secrets Mgmt
+Token stored in AWS Secrets Manager for Confluence
+API Gateway
+Optional IAM token or IP-based restriction for frontend access
+
+
+5. 💰 Cost Estimate (POC with provisioned OpenSearch)
+
+5. 💰 Cost Estimate (POC with provisioned OpenSearch)
+
+Service
+POC Est. Monthly
+Notes
+Confluence API
+Free (licensed)
+Used for source docs
+Titan Embeddings
+$1–3
+Based on daily doc size
+OpenSearch (Provisioned)
+$70–100
+Small 2-node cluster with ~50k docs
+Claude 3 Sonnet
+$5–15
+Based on query count and length
+Lambda (Index + Query)
+$2–4
+Scheduled and on-demand
+API Gateway (HTTP)
+<$1
+Lightweight usage
+CloudWatch
+~$1–2
+Logs, metrics
+Total
+$80–125/mo
+Approximate POC operating cost
+
+
+6. 🧭 Future Enhancements
+	•	Display images from Confluence in chat UI
+	•	Add table rendering support in HTML frontend
+	•	Implement follow-up (multi-turn) context memory
+	•	Use categories/tags in vector metadata for filtering
+	•	Enable fallback to real-time Confluence query on miss
+	•	Add feedback UI (“Was this helpful?”)
+
+
+
+
+
