@@ -1,20 +1,19 @@
-CloudOps Chatbot Update – Ask Clara is Now Live! 🚀
+annotations = {
+  summary     = "API Gateway alert for {{$labels.apiname}}"
+  description = "View metrics in [Grafana Dashboard](${var.grafana_base_url}/d/${var.apigw_dashboard_uid}/${var.apigw_dashboard_slug}?var-agg=S_auto&var-datasource=${var.cloudwatch_data_source_uid}&var-region={{ $labels.region }}&var-apiname={{ $labels.apiname }}&var-stage={{ $labels.stage }})"
+}
 
-We’ve now completed the frontend implementation for Ask Clara – A GenAI Assistant for Smarter Operations. The UI is fully functional and integrated with the backend, allowing users to interact with Clara in a clean, intuitive chat interface.
+In your variables.tf:
 
-✅ What’s working:
-	•	Users can now type questions directly into the frontend UI.
-	•	Clara responds with clear, step-by-step resolutions pulled from indexed Confluence playbooks via OpenSearch vector search.
-	•	The chatbot flow feels native and aligns with how Ops engineers would expect to get guided assistance.
+variable "grafana_base_url" {
+  default = "https://grafana.logging-nonprod.logging.awscfs.frb.pvt"
+}
 
-💡 Example:
-Users can ask things like:
+variable "apigw_dashboard_uid" {
+  default = "AWSAPIGat"  # Confirm this UID in Grafana dashboard settings
+}
 
-“How to analyze VPC flow logs?”
-“What should I do if my AWS credentials are compromised?”
-…and Clara will respond with structured instructions sourced from operational documentation.
+variable "apigw_dashboard_slug" {
+  default = "aws-api-gateway"
+}
 
-🛠️ Tech Notes:
-	•	Frontend is hosted and connected to the backend API Gateway.
-	•	Uses Bedrock Claude for LLM processing and Titan for vector embeddings.
-	•	All indexing and query Lambda functions have been refactored to remove LangChain dependencies.
