@@ -1,5 +1,8 @@
-const responseText = typeof data === 'string'
-  ? data
-  : data.answer || data.message || "Clara couldn’t find an answer.";
+const data = await response.json();
+console.log("API Response:", data);
+
+const responseText = Array.isArray(data.answer)
+  ? data.answer.map(item => item.text || item.content || '').join('\n')
+  : data.answer || "Clara couldn’t find an answer.";
 
 addMessage(responseText, 'bot');
