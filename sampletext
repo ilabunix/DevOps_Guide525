@@ -69,3 +69,18 @@ User asks: “How do I handle an ALB TLS negotiation error?”
 
 That’s what “Augmented” means — the model is boosted with external knowledge at runtime.
 
+🔹 What Clara Stands For
+
+CLARA = Contextual Learning and Retrieval Agent
+
+This represents the underlying architecture and purpose of the system:
+	•	Contextual – understands natural language queries and environment-specific context (e.g., staging vs. prod, cloud vs. on-prem)
+	•	Learning – continuously improves via updates to playbooks, runbooks, and feedback
+	•	Retrieval – uses Retrieval-Augmented Generation (RAG) to fetch relevant knowledge from trusted sources
+	•	Agent – acts as an intelligent system that assists, guides, and explains — not just a passive chatbot
+
+⸻
+
+🧠 In One Line:
+
+We named it Clara because she brings clarity to operations — using GenAI to turn tribal knowledge into trustworthy answers.
