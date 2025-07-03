@@ -1,0 +1,120 @@
+//@version=5
+strategy("EMAX Daily Swing Strategy", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+/// === INPUTS === ///
+length8    = input.int(8, title="8 EMA")
+length13   = input.int(13, title="13 EMA")
+length48   = input.int(48, title="48 EMA")
+length200  = input.int(200, title="200 EMA")
+breakoutLookback = input.int(10, title="Bull Flag Lookback")
+atrLen     = input.int(14, title="ATR Length")
+tp1Mult    = input.float(1.5, title="TP1 ATR Multiplier")
+tp2Mult    = input.float(2.5, title="TP2 ATR Multiplier")
+
+/// === EMAs === ///
+ema8   = ta.ema(close, length8)
+ema13  = ta.ema(close, length13)
+ema48  = ta.ema(close, length48)
+ema200 = ta.ema(close, length200)
+
+/// === PLOTS === ///
+plot(ema8, title="8 EMA", color=color.orange)
+plot(ema13, title="13 EMA", color=color.green)
+plot(ema48, title="48 EMA", color=color.red)
+plot(ema200, title="200 EMA", color=color.purple)
+
+/// === ATR & ENTRY/TP VARS === ///
+atr = ta.atr(atrLen)
+var float entryPrice = na
+tp1 = entryPrice + (atr * tp1Mult)
+tp2 = entryPrice + (atr * tp2Mult)
+
+/// === CONDITIONS === ///
+// Trend filters
+bullishEMACross = ema8 > ema13 and ema13 > ema48
+above200EMA     = close > ema200
+// Bull flag breakout
+recentHigh = ta.highest(close, breakoutLookback)
+bullFlagBreakout = ta.crossover(close, recentHigh)
+// Entry
+entryCondition = bullishEMACross and above200EMA and bullFlagBreakout
+// Exit
+exitCondition  = close[1] > ema8[1] and close < ema8
+
+/// === STRATEGY EXECUTION === ///
+if entryCondition
+    strategy.entry("CALL", strategy.long, comment="EMAX Entry")
+    entryPrice := close
+
+tp1Hit = strategy.position_size > 0 and close >= (entryPrice + atr * tp1Mult)
+tp2Hit = strategy.position_size > 0 and close >= (entryPrice + atr * tp2Mult)
+
+if exitCondition
+    strategy.close("CALL", comment="Exit on Full Candle Close Below 8EMA")
+
+/// === DISCORD-FORMATTED ALERTS (EMBEDS) === ///
+alertcondition(entryCondition, title="EMAX Entry Trigger",
+  message='{
+  "embeds": [{
+    "title": "🟢 EMAX ENTRY ALERT",
+    "description": "**Ticker:** {{ticker}}\\n**Price:** {{close}}\\n**Time:** {{time}}",
+    "color": 5763719,
+    "footer": {"text": "Strategy: EMAX | Type: CALL"}
+  }]
+}')
+
+alertcondition(tp1Hit, title="TP1 Hit",
+  message='{
+  "embeds": [{
+    "title": "⚡ TP1 TARGET HIT",
+    "description": "**Ticker:** {{ticker}}\\n**Price:** {{close}}\\n**TP1 Reached (1.5×ATR)**\\n**Time:** {{time}}",
+    "color": 16776960,
+    "footer": {"text": "Strategy: EMAX"}
+  }]
+}')
+
+alertcondition(tp2Hit, title="TP2 Hit",
+  message='{
+  "embeds": [{
+    "title": "🚀 TP2 TARGET HIT",
+    "description": "**Ticker:** {{ticker}}\\n**Price:** {{close}}\\n**TP2 Reached (2.5×ATR)**\\n**Time:** {{time}}",
+    "color": 16753920,
+    "footer": {"text": "Strategy: EMAX"}
+  }]
+}')
+
+alertcondition(exitCondition, title="EMAX Exit Trigger",
+  message='{
+  "embeds": [{
+    "title": "🔴 EMAX EXIT SIGNAL",
+    "description": "**Ticker:** {{ticker}}\\n**Price:** {{close}}\\n**Reason:** Closed below 8 EMA\\n**Time:** {{time}}",
+    "color": 14177041,
+    "footer": {"text": "Strategy: EMAX | Type: Runner Exit"}
+  }]
+}')
+
+/// === DASHBOARD ON CHART === ///
+var string lastSignal = ""
+if entryCondition
+    lastSignal := "ENTRY"
+if tp1Hit
+    lastSignal := "TP1 HIT"
+if tp2Hit
+    lastSignal := "TP2 HIT"
+if exitCondition
+    lastSignal := "EXIT"
+
+positionStatus = strategy.position_size > 0 ? "IN TRADE" : "NO POSITION"
+
+var label dashboard = na
+if bar_index % 5 == 0
+    label.delete(dashboard)
+    dashboard := label.new(x=bar_index, y=high, xloc=xloc.bar_index, yloc=yloc.abovebar, style=label.style_label_left,
+        color=color.gray, textcolor=color.white,
+        text="📊 EMAX DASHBOARD\n" +
+             "Status: " + positionStatus + "\n" +
+             "Last Signal: " + lastSignal + "\n" +
+             "Entry: " + (na(entryPrice) ? "—" : str.tostring(entryPrice, format.mintick)) + "\n" +
+             "TP1: " + (na(entryPrice) ? "—" : str.tostring(tp1, format.mintick)) + "\n" +
+             "TP2: " + (na(entryPrice) ? "—" : str.tostring(tp2, format.mintick))
+    )
