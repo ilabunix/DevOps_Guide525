@@ -11,13 +11,8 @@ for option in results:
         delta = greeks.get("delta", None)
         opt_type = details["option_type"]
 
-        # Final FlowStrike filters
-        if (
-            opt_type == "call"
-            and delta is not None and 0.40 <= delta <= 0.60
-            and volume > oi
-            and volume * price > 200000
-        ):
+        # TEMP relaxed filters to force output
+        if opt_type == "call" and volume > 0 and price > 0:
             signals.append({
                 "ticker": details["underlying_asset"]["ticker"],
                 "strike": details["strike_price"],
@@ -25,9 +20,9 @@ for option in results:
                 "entry": price,
                 "volume": volume,
                 "oi": oi,
-                "delta": round(delta, 2),
-                "iv_rank": 21,  # still placeholder for now
-                "flow_score": 85,
+                "delta": round(delta, 2) if delta else None,
+                "iv_rank": 21,
+                "flow_score": 70,
                 "type": "intraday",
                 "vwap_breakout": True
             })
