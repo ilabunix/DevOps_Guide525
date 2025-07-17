@@ -1,14 +1,59 @@
-print("\n📡 Fetching option chain snapshot...")
-print(f"API URL: {url}")
-print(f"HTTP Status: {response.status_code}")
+import os
+import requests
+import pandas as pd
+from dotenv import load_dotenv
 
-try:
-    data = response.json()
-    print(f"✅ Parsed response. Result count: {len(data.get('results', []))}")
-    if len(data.get("results", [])) == 0:
-        print("⚠️ No results returned. Raw response:")
-        print(response.text)
-except Exception as e:
-    print("❌ JSON parse error:", e)
-    print("Raw response:", response.text)
-    return pd.DataFrame()
+load_dotenv()
+API_KEY = os.getenv("POLYGON_API_KEY")
+
+def generate_signals():
+    ticker = "TSLA"
+    url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={API_KEY}"
+
+    print("\n📡 Fetching option chain snapshot...")
+    print(f"API URL: {url}")
+
+    response = requests.get(url)
+    print(f"HTTP Status: {response.status_code}")
+
+    try:
+        data = response.json()
+        results = data.get("results", [])
+        print(f"✅ Parsed response. Result count: {len(results)}")
+        if len(results) == 0:
+            print("⚠️ No results returned. Raw response:")
+            print(response.text)
+            return pd.DataFrame()
+    except Exception as e:
+        print("❌ JSON parse error:", e)
+        print("Raw response:", response.text)
+        return pd.DataFrame()
+
+    signals = []
+
+    for option in results:
+        try:
+            opt_type = option["details"]["option_type"]
+            volume = option["day"]["volume"]
+            oi = option["open_interest"]
+            ask = option["last_quote"]["ask"]
+            delta = option["greeks"]["delta"]
+
+            if opt_type == "call" and delta and ask:
+                signals.append({
+                    "ticker": ticker,
+                    "strike": option["details"]["strike_price"],
+                    "expiry": option["details"]["expiration_date"],
+                    "entry": ask,
+                    "volume": volume,
+                    "oi": oi,
+                    "delta": delta,
+                    "iv_rank": 21,
+                    "flow_score": 75,
+                    "type": "intraday",
+                    "vwap_breakout": True
+                })
+        except Exception as e:
+            continue
+
+    return pd.DataFrame(signals)
