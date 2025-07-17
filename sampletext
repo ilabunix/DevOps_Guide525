@@ -4,13 +4,20 @@ for option in results:
     try:
         details = option["details"]
         day = option["day"]
+        greeks = option.get("greeks", {})
         oi = option["open_interest"]
         volume = day.get("volume", 0)
         price = day.get("close", 0)
+        delta = greeks.get("delta", None)
         opt_type = details["option_type"]
 
-        # Remove broken fields
-        if opt_type == "call" and volume > oi and price * volume > 200000:
+        # Final FlowStrike filters
+        if (
+            opt_type == "call"
+            and delta is not None and 0.40 <= delta <= 0.60
+            and volume > oi
+            and volume * price > 200000
+        ):
             signals.append({
                 "ticker": details["underlying_asset"]["ticker"],
                 "strike": details["strike_price"],
@@ -18,9 +25,9 @@ for option in results:
                 "entry": price,
                 "volume": volume,
                 "oi": oi,
-                "delta": 0.45,         # Placeholder until delta is available
-                "iv_rank": 21,         # Placeholder
-                "flow_score": 78,
+                "delta": round(delta, 2),
+                "iv_rank": 21,  # still placeholder for now
+                "flow_score": 85,
                 "type": "intraday",
                 "vwap_breakout": True
             })
