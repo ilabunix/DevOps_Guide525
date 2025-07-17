@@ -1,7 +1,6 @@
 import os
 import requests
 import pandas as pd
-from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,9 +8,6 @@ API_KEY = os.getenv("POLYGON_API_KEY")
 
 def generate_signals():
     ticker = "TSLA"
-    date = "2024-07-03"  # Any recent trading day for backtest
-
-    # Fetch option chain snapshot
     url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={API_KEY}"
     response = requests.get(url)
     data = response.json()
@@ -19,27 +15,32 @@ def generate_signals():
     signals = []
     for option in data.get("results", []):
         try:
+            opt_type = option["details"]["option_type"]
+            volume = option["day"]["volume"]
+            oi = option["open_interest"]
+            ask = option["last_quote"]["ask"]
+            delta = option["greeks"]["delta"]
+
             if (
-                option["details"]["option_type"] == "call"
-                and option["greeks"]["delta"] >= 0.4 and option["greeks"]["delta"] <= 0.6
-                and option["open_interest"] > 0
-                and option["day"]["volume"] > option["open_interest"]
-                and option["day"]["volume"] * option["last_quote"]["ask"] > 200000
+                opt_type == "call"
+                and delta >= 0.4 and delta <= 0.6
+                and volume > oi
+                and volume * ask > 200000
             ):
                 signals.append({
                     "ticker": ticker,
                     "strike": option["details"]["strike_price"],
                     "expiry": option["details"]["expiration_date"],
-                    "entry": option["last_quote"]["ask"],
-                    "volume": option["day"]["volume"],
-                    "oi": option["open_interest"],
-                    "delta": option["greeks"]["delta"],
-                    "iv_rank": 21,  # Placeholder for now
-                    "flow_score": 85,  # Basic score for valid signals
+                    "entry": ask,
+                    "volume": volume,
+                    "oi": oi,
+                    "delta": delta,
+                    "iv_rank": 21,  # Placeholder
+                    "flow_score": 85,
                     "type": "intraday",
-                    "vwap_breakout": True  # Simulate breakout flag
+                    "vwap_breakout": True  # Placeholder
                 })
-        except Exception:
+        except:
             continue
 
     return pd.DataFrame(signals)
