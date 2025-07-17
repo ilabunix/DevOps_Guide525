@@ -1,30 +1,65 @@
-signals = []
+import os
+import requests
+import pandas as pd
+from dotenv import load_dotenv
 
-for option in results:
+load_dotenv()
+API_KEY = os.getenv("POLYGON_API_KEY")
+
+def generate_signals():
+    ticker = "AAPL"  # You can change to TSLA, NVDA, SPY, etc.
+    url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={API_KEY}"
+
+    print("\n📡 Fetching option chain snapshot...")
+    print(f"API URL: {url}")
+
+    response = requests.get(url)
+    print(f"HTTP Status: {response.status_code}")
+
     try:
-        details = option["details"]
-        day = option["day"]
-        greeks = option.get("greeks", {})
-        oi = option["open_interest"]
-        volume = day.get("volume", 0)
-        price = day.get("close", 0)
-        delta = greeks.get("delta", None)
-        opt_type = details["option_type"]
-
-        # TEMP relaxed filters to force output
-        if opt_type == "call" and volume > 0 and price > 0:
-            signals.append({
-                "ticker": details["underlying_asset"]["ticker"],
-                "strike": details["strike_price"],
-                "expiry": details["expiration_date"],
-                "entry": price,
-                "volume": volume,
-                "oi": oi,
-                "delta": round(delta, 2) if delta else None,
-                "iv_rank": 21,
-                "flow_score": 70,
-                "type": "intraday",
-                "vwap_breakout": True
-            })
+        data = response.json()
+        results = data.get("results", [])
+        print(f"✅ Parsed response. Result count: {len(results)}")
+        if len(results) == 0:
+            print("⚠️ No results returned. Raw response:")
+            print(response.text)
+            return pd.DataFrame()
     except Exception as e:
-        continue
+        print("❌ JSON parse error:", e)
+        print("Raw response:", response.text)
+        return pd.DataFrame()
+
+    signals = []
+
+    for option in results:
+        try:
+            details = option["details"]
+            day = option["day"]
+            greeks = option.get("greeks", {})
+            oi = option.get("open_interest", 0)
+            volume = day.get("volume", 0)
+            price = day.get("close", 0)
+            delta = greeks.get("delta", 0.45)  # fallback if not available
+            opt_type = details["option_type"]
+
+            # Very relaxed filter for testing
+            if opt_type == "call" and volume > 0 and price > 0:
+                signals.append({
+                    "ticker": details["underlying_asset"]["ticker"],
+                    "strike": details["strike_price"],
+                    "expiry": details["expiration_date"],
+                    "entry": price,
+                    "volume": volume,
+                    "oi": oi,
+                    "delta": round(delta, 2),
+                    "iv_rank": 21,
+                    "flow_score": 72,
+                    "type": "intraday",
+                    "vwap_breakout": True
+                })
+        except Exception as e:
+            print("❌ Failed to parse an option:", e)
+            continue
+
+    print(f"✅ Signals generated: {len(signals)}")
+    return pd.DataFrame(signals)
