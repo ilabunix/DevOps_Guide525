@@ -1,46 +1,14 @@
-import os
-import requests
-import pandas as pd
-from dotenv import load_dotenv
-
-load_dotenv()
-API_KEY = os.getenv("POLYGON_API_KEY")
-
-def generate_signals():
-    ticker = "TSLA"
-    url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-
-    signals = []
-    for option in data.get("results", []):
-        try:
-            opt_type = option["details"]["option_type"]
-            volume = option["day"]["volume"]
-            oi = option["open_interest"]
-            ask = option["last_quote"]["ask"]
-            delta = option["greeks"]["delta"]
-
-            if (
-                opt_type == "call"
-                and delta >= 0.4 and delta <= 0.6
-                and volume > oi
-                and volume * ask > 200000
-            ):
-                signals.append({
-                    "ticker": ticker,
-                    "strike": option["details"]["strike_price"],
-                    "expiry": option["details"]["expiration_date"],
-                    "entry": ask,
-                    "volume": volume,
-                    "oi": oi,
-                    "delta": delta,
-                    "iv_rank": 21,  # Placeholder
-                    "flow_score": 85,
-                    "type": "intraday",
-                    "vwap_breakout": True  # Placeholder
-                })
-        except:
-            continue
-
-    return pd.DataFrame(signals)
+if opt_type == "call" and delta and ask:
+    signals.append({
+        "ticker": ticker,
+        "strike": option["details"]["strike_price"],
+        "expiry": option["details"]["expiration_date"],
+        "entry": ask,
+        "volume": volume,
+        "oi": oi,
+        "delta": delta,
+        "iv_rank": 21,
+        "flow_score": 75,
+        "type": "intraday",
+        "vwap_breakout": True
+    })
