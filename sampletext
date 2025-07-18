@@ -1,4 +1,4 @@
-// EMAX Genesis Pro: Multi-Exit (TP/SL/Trailing) Black-Box Strategy
+// EMAX Genesis Pro: Dual Crossover + TP/SL, Conflict-Free, No Trailing Stop
 
 using System;
 using System.Windows.Media;
@@ -45,12 +45,6 @@ namespace NinjaTrader.NinjaScript.Strategies
         [NinjaScriptProperty]
         public int StopLossTicks { get; set; }
 
-        // --- New: Trailing Stop Feature ---
-        [NinjaScriptProperty]
-        public bool TrailingStop { get; set; }
-        [NinjaScriptProperty]
-        public int TrailingStopWindow { get; set; }
-
         // --- Internal ---
         private EMA ema10, ema21, ema55;
         private string lastSignal = "None";
@@ -84,8 +78,6 @@ namespace NinjaTrader.NinjaScript.Strategies
                 ManualCloseAutoContinue = false;
                 TakeProfitTicks = 40;
                 StopLossTicks = 20;
-                TrailingStop = false;
-                TrailingStopWindow = 10;
             }
             else if (State == State.DataLoaded)
             {
@@ -105,7 +97,7 @@ namespace NinjaTrader.NinjaScript.Strategies
 
         protected override void OnBarUpdate()
         {
-            if (CurrentBar < Math.Max(55, TrailingStopWindow)) return;
+            if (CurrentBar < 55) return;
 
             // --- Session Filter ---
             if (EnableSessionFilter)
@@ -197,61 +189,44 @@ namespace NinjaTrader.NinjaScript.Strategies
                 }
             }
 
-            // --- Exit Logic (Standard/Dynamic/Trailing) ---
+            // --- Exit Logic (Standard/Dynamic) ---
             if (Position.MarketPosition == MarketPosition.Long)
             {
-                // Standard Exit
                 if (TradeGuardStandard && CrossBelow(ema10, ema55, 1))
                 {
                     strategyInitiatedExit = true;
+                    // Remove TP/SL before exiting by logic
+                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
+                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitLong("StdExit");
                     lastSignal = "Exit Long - Std";
                 }
-                // Dynamic Exit
                 if (TradeGuardDynamic && CrossBelow(ema10, ema21, 1))
                 {
                     strategyInitiatedExit = true;
+                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
+                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitLong("DynExit");
                     lastSignal = "Exit Long - Dynamic";
-                }
-                // Trailing Stop (Bar-Low)
-                if (TrailingStop)
-                {
-                    double chandLow = MIN(Low, TrailingStopWindow)[0];
-                    if (Close[0] < chandLow)
-                    {
-                        strategyInitiatedExit = true;
-                        ExitLong("TrailingStop");
-                        lastSignal = $"Exit Long - Trail ({TrailingStopWindow})";
-                    }
                 }
             }
             if (Position.MarketPosition == MarketPosition.Short)
             {
-                // Standard Exit
                 if (TradeGuardStandard && CrossAbove(ema10, ema55, 1))
                 {
                     strategyInitiatedExit = true;
+                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
+                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitShort("StdExit");
                     lastSignal = "Exit Short - Std";
                 }
-                // Dynamic Exit
                 if (TradeGuardDynamic && CrossAbove(ema10, ema21, 1))
                 {
                     strategyInitiatedExit = true;
+                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
+                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitShort("DynExit");
                     lastSignal = "Exit Short - Dynamic";
-                }
-                // Trailing Stop (Bar-High)
-                if (TrailingStop)
-                {
-                    double chandHigh = MAX(High, TrailingStopWindow)[0];
-                    if (Close[0] > chandHigh)
-                    {
-                        strategyInitiatedExit = true;
-                        ExitShort("TrailingStop");
-                        lastSignal = $"Exit Short - Trail ({TrailingStopWindow})";
-                    }
                 }
             }
         }
@@ -260,8 +235,6 @@ namespace NinjaTrader.NinjaScript.Strategies
         {
             base.OnRender(chartControl, chartScale);
 
-            // --- Dashboard Open PnL Fix ---
-            // Use Position.GetUnrealizedProfitLoss only if in a position, otherwise show "—"
             string openPnLText = "—";
             if (Position.MarketPosition != MarketPosition.Flat)
                 openPnLText = Position.GetUnrealizedProfitLoss(PerformanceUnit.Currency, Close[0]).ToString("F2");
@@ -269,7 +242,6 @@ namespace NinjaTrader.NinjaScript.Strategies
             string dashText =
                 "EMAX Genesis Pro\n" +
                 "Trade Guard: " + (TradeGuardDynamic ? "Dynamic" : "Standard") + "\n" +
-                "Trailing Stop: " + (TrailingStop ? $"On ({TrailingStopWindow} bars)" : "Off") + "\n" +
                 "Session: " + (EnableSessionFilter ? $"{SessionStartTime:hh\\:mm}-{SessionEndTime:hh\\:mm}" : "All") + "\n" +
                 "Daily PnL: " + sessionPnL.ToString("C0") +
                 (DailyGoalLock ? $" | Goal: {DailyProfitGoal:C0}" : "") +
