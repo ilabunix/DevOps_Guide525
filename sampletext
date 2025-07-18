@@ -1,4 +1,4 @@
-// EMAX Genesis Pro: Dual Crossover + TP/SL, Conflict-Free, No Trailing Stop
+// EMAX Genesis Pro: Clean Dashboard, No Open PnL
 
 using System;
 using System.Windows.Media;
@@ -56,6 +56,8 @@ namespace NinjaTrader.NinjaScript.Strategies
         private bool manualFlatDetected = false;
         private bool strategyInitiatedExit = false;
         private MarketPosition lastMarketPosition = MarketPosition.Flat;
+        private bool tpArmed = false;
+        private bool slArmed = false;
 
         protected override void OnStateChange()
         {
@@ -92,6 +94,8 @@ namespace NinjaTrader.NinjaScript.Strategies
                 manualFlatDetected = false;
                 strategyInitiatedExit = false;
                 lastMarketPosition = MarketPosition.Flat;
+                tpArmed = false;
+                slArmed = false;
             }
         }
 
@@ -119,6 +123,8 @@ namespace NinjaTrader.NinjaScript.Strategies
                 strategyInitiatedExit = false;
                 lastMarketPosition = MarketPosition.Flat;
                 lastSignal = "None";
+                tpArmed = false;
+                slArmed = false;
             }
 
             // --- Update Session PnL ---
@@ -138,10 +144,9 @@ namespace NinjaTrader.NinjaScript.Strategies
             if ((hitDailyProfit || hitDailyStop) && Position.MarketPosition == MarketPosition.Flat)
                 return; // Don't enter new trades
 
-            // --- Robust Manual Flat Detection (fixed) ---
+            // --- Manual Flat Detection (fixed) ---
             if (lastMarketPosition != MarketPosition.Flat && Position.MarketPosition == MarketPosition.Flat)
             {
-                // Just transitioned from position to flat
                 if (!strategyInitiatedExit)
                 {
                     manualFlatDetected = true;
@@ -152,25 +157,36 @@ namespace NinjaTrader.NinjaScript.Strategies
                         return;
                     }
                 }
-                // Whether manual or strategy exit, reset for next position
                 strategyInitiatedExit = false;
             }
             if (Position.MarketPosition != MarketPosition.Flat)
                 manualFlatDetected = false; // Reset as soon as a new position is open
 
-            // Save last position for next bar
             lastMarketPosition = Position.MarketPosition;
 
-            // --- Arm/Disarm TP/SL for new trades (NT8 managed requirement) ---
-            if (TargetLock && Position.MarketPosition == MarketPosition.Flat)
-                SetProfitTarget(CalculationMode.Ticks, TakeProfitTicks);
-            else
+            // --- TP/SL Logic ---
+            if (Position.MarketPosition == MarketPosition.Flat)
+            {
+                // Disarm TP/SL (only when flat)
+                tpArmed = false;
+                slArmed = false;
                 SetProfitTarget(CalculationMode.Ticks, double.NaN);
-
-            if (SafetyNet && Position.MarketPosition == MarketPosition.Flat)
-                SetStopLoss(CalculationMode.Ticks, StopLossTicks);
-            else
                 SetStopLoss(CalculationMode.Ticks, double.NaN);
+            }
+            else
+            {
+                // Arm TP/SL ONCE after entry
+                if (!tpArmed && TargetLock)
+                {
+                    SetProfitTarget(CalculationMode.Ticks, TakeProfitTicks);
+                    tpArmed = true;
+                }
+                if (!slArmed && SafetyNet)
+                {
+                    SetStopLoss(CalculationMode.Ticks, StopLossTicks);
+                    slArmed = true;
+                }
+            }
 
             // --- Entry Logic (Black Box) ---
             if (!hitDailyProfit && !hitDailyStop && !manualFlatDetected)
@@ -195,17 +211,12 @@ namespace NinjaTrader.NinjaScript.Strategies
                 if (TradeGuardStandard && CrossBelow(ema10, ema55, 1))
                 {
                     strategyInitiatedExit = true;
-                    // Remove TP/SL before exiting by logic
-                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
-                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitLong("StdExit");
                     lastSignal = "Exit Long - Std";
                 }
                 if (TradeGuardDynamic && CrossBelow(ema10, ema21, 1))
                 {
                     strategyInitiatedExit = true;
-                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
-                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitLong("DynExit");
                     lastSignal = "Exit Long - Dynamic";
                 }
@@ -215,16 +226,12 @@ namespace NinjaTrader.NinjaScript.Strategies
                 if (TradeGuardStandard && CrossAbove(ema10, ema55, 1))
                 {
                     strategyInitiatedExit = true;
-                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
-                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitShort("StdExit");
                     lastSignal = "Exit Short - Std";
                 }
                 if (TradeGuardDynamic && CrossAbove(ema10, ema21, 1))
                 {
                     strategyInitiatedExit = true;
-                    SetProfitTarget(CalculationMode.Ticks, double.NaN);
-                    SetStopLoss(CalculationMode.Ticks, double.NaN);
                     ExitShort("DynExit");
                     lastSignal = "Exit Short - Dynamic";
                 }
@@ -234,10 +241,6 @@ namespace NinjaTrader.NinjaScript.Strategies
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale)
         {
             base.OnRender(chartControl, chartScale);
-
-            string openPnLText = "—";
-            if (Position.MarketPosition != MarketPosition.Flat)
-                openPnLText = Position.GetUnrealizedProfitLoss(PerformanceUnit.Currency, Close[0]).ToString("F2");
 
             string dashText =
                 "EMAX Genesis Pro\n" +
@@ -253,7 +256,6 @@ namespace NinjaTrader.NinjaScript.Strategies
                  Position.MarketPosition == MarketPosition.Short ? "Short" : "Flat") + "\n" +
                 "Avg Price: " +
                 (Position.MarketPosition != MarketPosition.Flat ? Position.AveragePrice.ToString("F2") : "—") + "\n" +
-                "Open PnL: " + openPnLText + "\n" +
                 "Last Signal: " + lastSignal;
 
             Draw.TextFixed(this, "EMAX_DASH", dashText, TextPosition.BottomRight);
