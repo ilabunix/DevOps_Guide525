@@ -1,176 +1,140 @@
-📘 Confluence Page: NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
+🔹 Slide 1: AI-Powered Operations Knowledge – Eliminating the Bottleneck
 
-(Slug: playbooks/nimbusapp-server-troubleshooting)
+Script:
+“Hi everyone — thanks for joining. Today I want to walk you through the work we’ve done on an AI-powered chatbot for operations knowledge, and how it’s helping eliminate delays during incidents by making critical information instantly accessible.
 
-⸻
-
-🧠 Summary
-
-This playbook provides actionable steps to resolve common server issues across the NimbusApp architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
-
-This content is indexed for the NimbusOps Chatbot, which can answer contextually with specific command-line instructions and AWS console navigation.
-
-🏷️ Server Roles
-Server
-Role
-Hostname/Tag
-frontend01
-NimbusApp Web UI Server
-Name=frontend01
-frontend02
-NimbusApp API Gateway
-Name=frontend02
-backend01
-NimbusApp Core App Logic
-Name=backend01
-backend02
-NimbusApp Queue Processor
-Name=backend02
-db01
-NimbusApp PostgreSQL RDS
-Name=db01
-
-🚨 Common Issues & Solutions by Server Type
+This is part of our broader initiative to apply GenAI meaningfully in technical operations — and this chatbot POC marks a key milestone toward that.”
 
 ⸻
 
-🖥️ Frontend Servers – frontend01, frontend02
+🔹 Slide 2: The Problem We’re Solving
+
+Script:
+“We’ve all experienced the issue:
+	•	Documentation is everywhere — Confluence, OneDrive, SharePoint — but not in one place.
+	•	During incidents, we spend more time searching than solving.
+	•	And SMEs aren’t always available when we need them.
+
+Even when knowledge exists, it’s often buried or not in a consumable format. That’s the bottleneck we wanted to eliminate.”
 
 ⸻
 
-🔧 Issue: NimbusApp UI Not Loading (502/504)
+🔹 Slide 3: How the Chatbot Helps Ops Teams
 
-Symptoms:
-	•	Browser shows 502 Bad Gateway or 504 Timeout.
-	•	CloudFront/ALB shows targets as unhealthy.
+Script:
+“Our GenAI-powered chatbot is built to directly address this challenge:
+	•	You ask a question in natural language.
+	•	It understands what you mean and returns specific answers from our runbooks and playbooks.
+	•	It’s available 24x7, acting like a virtual SME.
+	•	It works both via a Web UI and integrates with Microsoft Teams — so it meets people where they work.
 
-Resolution:
-	1.	Navigate to EC2 > Instances > frontend01 in AWS Console.
-	2.	SSH into the instance:
-ssh ec2-user@<frontend01-ip>
-3.	Check Nginx:
-sudo systemctl status nginx
-4.	Restart if down:
-sudo systemctl restart nginx
-5.	Validate ALB health checks and run:
-curl -I https://frontend.nimbusapp.com
-
-🔧 Issue: Blank Screen on React App
-
-Symptoms:
-	•	React build deployed, but nothing shows on browser.
-
-Resolution:
-	1.	SSH into frontend01:
-ssh ec2-user@<frontend01-ip>
-	2.	Check if build folder exists:
-ls -l /var/www/html
-	3.	If empty, redeploy:
-cd /opt/deploy_scripts
-./deploy_frontend.sh
-🔄 Backend Servers – backend01, backend02
+This isn’t a generic LLM — it’s trained on our real documentation and optimized for our operational context.”
 
 ⸻
 
-🔧 Issue: NimbusApp API Endpoints Timing Out
+🔹 Slide 4: GenAI Strategy for FRFS Technical Operations
 
-Symptoms:
-	•	Frontend errors calling backend APIs.
-	•	No recent log activity.
+Script:
+“This chatbot is our first successful POC — but it’s just the beginning.
 
-Resolution:
-	1.	SSH into backend01:
-ssh ec2-user@<backend01-ip>
-2.	Check app process:
-ps aux | grep app.py
-3.	If not running:
-sudo systemctl restart backend-app.service
-4.	Confirm recovery:
-curl http://localhost:8080/health
+We’re aligning with the broader GenAI strategy for technical operations, which includes:
+	•	Assessment & Discovery: Finding more repetitive, high-friction tasks AI can support.
+	•	Pilot Implementation: Expanding from the chatbot into other use cases like automated alert triage or remediation workflows.
+	•	Scalable Integration: Building guardrails and frameworks to scale GenAI solutions responsibly across the enterprise.
 
-🔧 Issue: NimbusApp Queue Not Processing
+Key use cases include:
+	•	Intelligent monitoring
+	•	Ops automation
+	•	Capacity planning
+	•	And most importantly — context-aware documentation access, where this chatbot is already delivering value.”
 
-Symptoms:
-	•	SQS/Redis queues backing up.
-	•	backend02 not consuming tasks.
 
-Resolution:
-	1.	SSH into backend02:
-ssh ec2-user@<backend02-ip>
-2.	Check logs:
-tail -n 100 /var/log/worker.log
-	3.	Restart the queue processor:
-sudo systemctl restart worker-queue.service
-4.	Monitor:
-watch "ps aux | grep worker"
-
-🗄️ Database Node – db01 (PostgreSQL RDS)
+✅ Technical Demo Script – GenAI Chatbot for Operations
 
 ⸻
 
-🔧 Issue: NimbusApp Backend Fails to Connect to DB
+🔹 1. Introduction (Set the Context)
 
-Symptoms:
-	•	Logs show connection refused or timeout.
+Say:
+“Now I’ll give you a quick walkthrough of our GenAI chatbot in action.
 
-Resolution:
-	1.	Open RDS > db01 in AWS Console.
-	2.	Check status: should be Available.
-	3.	Review security groups: must allow port 5432 from backend SG.
-	4.	From backend01, test:
+This POC version is designed to assist production support and operations teams by retrieving context-specific guidance from internal runbooks and documentation — instantly, just by asking questions.”
 
-psql -h <db-host> -U nimbus_user -d nimbus_db
+⸻
 
-🔧 Issue: High CPU / Long Query Times
+🔹 2. Architecture Overview (optional quick visual or verbal walkthrough)
 
-Resolution:
-	1.	Open Performance Insights > db01.
-	2.	Identify top queries.
-	3.	From psql:
-SELECT pid, state, query FROM pg_stat_activity WHERE state != 'idle';
+Say:
+“Here’s how it works under the hood:
+	•	A user sends a natural language query through the chatbot UI
+	•	The query is semantically embedded using AWS Bedrock (Titan Embeddings)
+	•	That vector is matched against our indexed content in OpenSearch
+	•	The top relevant document snippets are retrieved
+	•	We then prompt an LLM like Claude via Bedrock to generate a contextual response
+	•	The final output is returned as a conversational answer
 
-4.	Kill problem query:
-SELECT pg_terminate_backend(<pid>);
+The backend is fully serverless — built using API Gateway, Lambda, Bedrock, and OpenSearch Serverless.”
 
-✅ Cheat Sheet – Validation Commands
+⸻
 
-Purpose
-Command
-App health
-curl http://localhost:8080/health
-Restart app
-sudo systemctl restart backend-app.service
-Logs (frontend)
-tail -n 100 /var/log/nginx/access.log
-Logs (backend)
-tail -n 100 /var/log/backend-app/app.log
-DB connect test
-psql -h <hostname> -U nimbus_user -d nimbus_db
+🔹 3. Live Interaction – Example Prompt
 
-Admin Automation Scripts
-Action
-Script
-Server recovery
-/admin/scripts/recover_server.sh <servername>
-Restart Nginx
-/admin/scripts/nginx_restart.sh frontend01
-Health check app
-/opt/app/scripts/check_health.sh
+Say:
+“Let’s try a real-world example an ops team might ask.”
 
-Escalation Protocol
+💬 Prompt in chatbot:
+“What steps should I follow to restart the Kafka connector for the payments service?”
 
-If issue persists after 15 minutes:
-	•	Post in #oncall-nimbus with:
-	•	🔹 Server name
-	•	🔹 Issue symptoms
-	•	🔹 Logs or error messages
-	•	🔹 Steps already taken
+Wait for response, then explain:
 
+Say:
+“As you can see, the chatbot:
+	•	Understood the context of Kafka connector
+	•	Pulled the exact steps from our documented restart procedure
+	•	And returned it in a clear, actionable format — no digging through Confluence needed.”
 
+⸻
 
+🔹 4. Follow-Up Query to Show Context Awareness
 
+Say:
+“Let’s now ask a follow-up to simulate a real incident scenario.”
 
+💬 Follow-up Prompt:
+“What logs should I check if the restart fails?”
 
+Say:
+“Notice how it retains the topic of the previous interaction — and suggests log locations and known failure patterns relevant to the payments connector.”
 
+⸻
 
+🔹 5. Troubleshooting/Runbook Example
 
+Say:
+“Let’s now try another operations use case — retrieving a troubleshooting guide.”
+
+💬 Prompt:
+“App XYZ is throwing 502 errors. How do I fix it?”
+
+Say:
+“The chatbot recognizes this as a known issue, fetches the relevant troubleshooting steps from the SOP, and even recommends what to verify first — like load balancer health checks or backend service status.”
+
+⸻
+
+🔹 6. Demo Wrap-Up: Transition to Next Phase
+
+Say:
+“This completes the core part of the demo.
+
+As you’ve seen:
+	•	The chatbot eliminates friction in accessing operational knowledge
+	•	It provides context-aware, LLM-powered answers in seconds
+	•	It’s already usable via web and soon Teams
+	•	And this is just the beginning — we’re preparing for broader rollout with more content, deeper integrations, and new use cases like intelligent alert triage and auto-remediation.”
+
+⸻
+
+🔹 Optional – Invite Engagement
+
+Say:
+“If your team has runbooks or common issues that would benefit from this, we’d love to collaborate and include your use cases in the production rollout.”
