@@ -8,190 +8,168 @@
     :root {
       --primary: #6d28d9;
       --primary-light: #a58cf6;
-      --primary-dark: #5b21b6;
+      --primary-dark: #4c1d95;
       --bot-bubble: #e0e7ff;
       --user-bubble: #dbeafe;
-      --bg-light: #f4f5f7;
-      --bg-dark: #1e1e2f;
-      --text-light: #212529;
-      --text-dark: #e0e0e0;
-      --card-light: white;
-      --card-dark: #2c2c3e;
-      --border-light: #dee2e6;
-      --border-dark: #44475a;
-    }
-
-    [data-theme="light"] {
-      --bg: var(--bg-light);
-      --text: var(--text-light);
-      --card: var(--card-light);
-      --card-border: var(--border-light);
+      --bg: #f8f9fa;
+      --text: #1f2937;
+      --card: #fff;
+      --border: #e5e7eb;
     }
 
     [data-theme="dark"] {
-      --bg: var(--bg-dark);
-      --text: var(--text-dark);
-      --card: var(--card-dark);
-      --card-border: var(--border-dark);
+      --bg: #111827;
+      --text: #e5e7eb;
+      --card: #1f2937;
+      --border: #374151;
+      --bot-bubble: #3b82f6;
+      --user-bubble: #8b5cf6;
     }
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, var(--bg), #d1c4e9);
+      background: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 2rem;
-      transition: background 0.4s ease;
+      padding: 0;
     }
 
     .chat-container {
-      max-width: 700px;
-      margin: auto;
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 1.5rem;
+      max-width: 800px;
+      margin: 2rem auto;
       background: var(--card);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 90vh;
     }
 
     .chat-header {
+      background: linear-gradient(90deg, #6d28d9, #9333ea);
+      color: white;
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
       font-weight: bold;
-      font-size: 1.4rem;
-      color: var(--primary);
-      margin-bottom: 1rem;
-    }
-
-    .chat-subtitle {
-      font-size: 0.95rem;
-      color: var(--text);
-      margin-bottom: 1.25rem;
     }
 
     .chat-history {
-      max-height: 400px;
+      flex-grow: 1;
       overflow-y: auto;
-      margin-bottom: 1rem;
-      padding-right: 0.5rem;
+      padding: 1rem;
     }
 
     .message {
       display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-      opacity: 0;
-      animation: fadeIn 0.4s forwards;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease-in;
     }
 
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: white;
-      font-size: 0.9rem;
-      text-transform: uppercase;
+    .message.bot {
+      justify-content: flex-start;
     }
 
-    .avatar-user { background: var(--primary-dark); }
-    .avatar-bot { background: var(--bot-bubble); color: #000; }
-
-    .message-content {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+    .message.user {
+      justify-content: flex-end;
     }
 
     .bubble {
-      padding: 0.8rem 1rem;
-      border-radius: 14px;
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 16px;
       font-size: 0.95rem;
-      line-height: 1.5;
-      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
+      line-height: 1.4;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease-in-out;
       white-space: pre-wrap;
-      animation: bubbleSlide 0.3s ease-in;
     }
 
-    .bubble-user {
-      background: var(--user-bubble);
-      color: var(--primary-dark);
-      border-bottom-right-radius: 4px;
-    }
-
-    .bubble-bot {
+    .bubble.bot {
       background: var(--bot-bubble);
+      color: #000;
       border-bottom-left-radius: 4px;
+    }
+
+    .bubble.user {
+      background: var(--user-bubble);
+      color: white;
+      border-bottom-right-radius: 4px;
     }
 
     .input-container {
       display: flex;
+      padding: 1rem;
+      border-top: 1px solid var(--border);
       gap: 0.5rem;
-      align-items: center;
+      background: var(--card);
     }
 
     #query {
       flex-grow: 1;
-      padding: 0.6rem 1rem;
-      border-radius: 10px;
-      border: 1px solid var(--card-border);
-      font-size: 1rem;
-      background: var(--card);
-      color: var(--text);
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
     }
 
     button {
-      padding: 0.6rem 1.2rem;
       background: var(--primary);
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 1rem;
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
-    button:hover {
-      background: var(--primary-dark);
-    }
-
-    .dark-mode-toggle {
+    .toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
-      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .toolbar button {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.8rem;
+      background: transparent;
+      border: 1px solid var(--border);
       color: var(--text);
     }
 
     @keyframes fadeIn {
-      to { opacity: 1; }
+      from {opacity: 0; transform: translateY(8px);}
+      to {opacity: 1; transform: translateY(0);}
     }
 
-    @keyframes bubbleSlide {
-      from { transform: translateY(10px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .dark-mode-toggle {
+      margin-left: auto;
+      font-size: 0.85rem;
     }
   </style>
 </head>
+
 <body data-theme="light">
   <div class="chat-container">
-    <div class="chat-header">Ask Clara – A GenAI Assistant for Smarter Operations</div>
-    <div class="chat-subtitle">Clara knows your playbooks, so you don’t have to.</div>
+    <div class="chat-header">
+      Ask Clara – A GenAI Assistant for Smarter Operations
+    </div>
 
     <div class="chat-history" id="chatHistory"></div>
 
     <div class="input-container">
-      <input type="text" id="query" placeholder="Ask Clara about operations, playbooks, or analytics..." />
+      <input type="text" id="query" placeholder="Ask Clara..." />
       <button onclick="askBot()">Send</button>
     </div>
 
-    <div class="dark-mode-toggle">
-      <label><input type="checkbox" id="themeToggle" /> Dark Mode</label>
-      <span id="statusText">Clara is online</span>
+    <div class="toolbar">
+      <button onclick="resetChat()">Reset Chat</button>
+      <button onclick="downloadTranscript()">Download Chat</button>
+      <label class="dark-mode-toggle">
+        <input type="checkbox" id="themeToggle"> Dark Mode
+      </label>
     </div>
   </div>
 
@@ -199,39 +177,14 @@
     const queryInput = document.getElementById("query");
     const chatHistory = document.getElementById("chatHistory");
     const themeToggle = document.getElementById("themeToggle");
-    const statusText = document.getElementById("statusText");
-
-    function addMessage(text, sender) {
-      const messageDiv = document.createElement("div");
-      messageDiv.className = "message";
-
-      const avatar = document.createElement("div");
-      avatar.className = `avatar avatar-${sender}`;
-      avatar.textContent = sender === "user" ? "U" : "C";
-
-      const content = document.createElement("div");
-      content.className = "message-content";
-
-      const bubble = document.createElement("div");
-      bubble.className = `bubble bubble-${sender}`;
-      bubble.textContent = text;
-
-      content.appendChild(bubble);
-      messageDiv.appendChild(avatar);
-      messageDiv.appendChild(content);
-      chatHistory.appendChild(messageDiv);
-
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
 
     async function askBot() {
       const query = queryInput.value.trim();
       if (!query) return;
-
       addMessage(query, "user");
       queryInput.value = "";
 
-      const thinking = addMessage("Clara is thinking...", "bot");
+      const thinkingMsg = addMessage("Clara is thinking...", "bot");
 
       try {
         const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
@@ -240,41 +193,62 @@
           body: JSON.stringify({ query })
         });
 
-        const rawText = await res.text();
+        const responseText = await res.text();
         let data;
+
         try {
-          data = JSON.parse(rawText);
+          data = JSON.parse(responseText);
         } catch {
-          data = { answer: rawText };
+          data = { answer: responseText };
         }
 
-        thinking.remove();
+        thinkingMsg.remove();
 
-        let finalAnswer = data.answer || data.message || data.response || JSON.stringify(data, null, 2);
-        addMessage(finalAnswer, "bot");
-
+        const answer = (data.answer || data.message || data.response || JSON.stringify(data)).toString();
+        addMessage(answer, "bot");
       } catch (err) {
-        thinking.remove();
-        addMessage(`⚠️ Error: ${err.message}`, "bot");
+        thinkingMsg.remove();
+        addMessage("⚠️ Error: " + err.message, "bot");
       }
     }
 
-    themeToggle.addEventListener("change", function () {
-      const mode = this.checked ? "dark" : "light";
-      document.body.setAttribute("data-theme", mode);
+    function addMessage(text, sender) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `message ${sender}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${sender}`;
+      bubble.textContent = text;
+
+      wrapper.appendChild(bubble);
+      chatHistory.appendChild(wrapper);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      return wrapper;
+    }
+
+    function resetChat() {
+      chatHistory.innerHTML = '';
+    }
+
+    function downloadTranscript() {
+      const lines = Array.from(chatHistory.children).map(div =>
+        `${div.classList.contains("user") ? "You" : "Clara"}: ${div.textContent.trim()}`
+      ).join("\n");
+      const blob = new Blob([lines], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "clara-chat.txt";
+      a.click();
+    }
+
+    themeToggle.addEventListener("change", () => {
+      document.body.setAttribute("data-theme", themeToggle.checked ? "dark" : "light");
     });
 
     queryInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        askBot();
-      }
+      if (e.key === "Enter") askBot();
     });
-
-    // Initial welcome message
-    window.onload = () => {
-      addMessage("Hello! I'm Clara, your operations assistant. How can I help you today?", "bot");
-    };
   </script>
 </body>
 </html>
