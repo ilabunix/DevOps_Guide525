@@ -7,79 +7,98 @@
   <style>
     :root {
       --primary: #6d28d9;
+      --primary-light: #a58cf6;
       --primary-dark: #5b21b6;
       --bot-bubble: #e0e7ff;
       --user-bubble: #dbeafe;
-      --border-light: #dee2e6;
-      --bg-light: #f8f9fa;
+      --bg-light: #f4f5f7;
+      --bg-dark: #1e1e2f;
       --text-light: #212529;
+      --text-dark: #e0e0e0;
+      --card-light: white;
+      --card-dark: #2c2c3e;
+      --border-light: #dee2e6;
+      --border-dark: #44475a;
     }
 
     [data-theme="light"] {
       --bg: var(--bg-light);
       --text: var(--text-light);
-      --card: white;
+      --card: var(--card-light);
       --card-border: var(--border-light);
     }
 
+    [data-theme="dark"] {
+      --bg: var(--bg-dark);
+      --text: var(--text-dark);
+      --card: var(--card-dark);
+      --card-border: var(--border-dark);
+    }
+
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, var(--bg), #d1c4e9);
       color: var(--text);
       margin: 0;
-      padding: 1rem;
+      padding: 2rem;
+      transition: background 0.4s ease;
     }
 
     .chat-container {
       max-width: 700px;
       margin: auto;
       border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1rem;
+      border-radius: 16px;
+      padding: 1.5rem;
       background: var(--card);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
     }
 
     .chat-header {
       font-weight: bold;
-      font-size: 1.25rem;
+      font-size: 1.4rem;
       color: var(--primary);
       margin-bottom: 1rem;
     }
 
+    .chat-subtitle {
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
     .chat-history {
-      max-height: 500px;
+      max-height: 400px;
       overflow-y: auto;
       margin-bottom: 1rem;
+      padding-right: 0.5rem;
     }
 
     .message {
       display: flex;
-      max-width: 90%;
+      align-items: flex-start;
       gap: 0.75rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0;
+      animation: fadeIn 0.4s forwards;
     }
 
     .avatar {
-      width: 2rem;
-      height: 2rem;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
+      background: var(--primary-light);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      font-size: 0.875rem;
-      flex-shrink: 0;
-    }
-
-    .avatar-user {
-      background: var(--primary);
       color: white;
+      font-size: 0.9rem;
+      text-transform: uppercase;
     }
 
-    .avatar-bot {
-      background: var(--bot-bubble);
-      color: black;
-    }
+    .avatar-user { background: var(--primary-dark); }
+    .avatar-bot { background: var(--bot-bubble); color: #000; }
 
     .message-content {
       display: flex;
@@ -88,12 +107,13 @@
     }
 
     .bubble {
-      padding: 0.75rem;
-      border-radius: 12px;
-      font-size: 0.9375rem;
+      padding: 0.8rem 1rem;
+      border-radius: 14px;
+      font-size: 0.95rem;
       line-height: 1.5;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
       white-space: pre-wrap;
+      animation: bubbleSlide 0.3s ease-in;
     }
 
     .bubble-user {
@@ -104,84 +124,82 @@
 
     .bubble-bot {
       background: var(--bot-bubble);
-      color: black;
       border-bottom-left-radius: 4px;
-    }
-
-    .typing {
-      font-style: italic;
-      font-size: 0.875rem;
-      padding-left: 2.5rem;
-      margin-bottom: 0.5rem;
     }
 
     .input-container {
       display: flex;
       gap: 0.5rem;
-      margin-top: 1rem;
+      align-items: center;
     }
 
     #query {
       flex-grow: 1;
-      padding: 0.5rem;
-      border: 1px solid var(--border-light);
-      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      font-size: 1rem;
+      background: var(--card);
+      color: var(--text);
     }
 
     button {
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       background: var(--primary);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
+      font-size: 1rem;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
-    .utility-buttons {
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    .dark-mode-toggle {
       display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: var(--text);
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes bubbleSlide {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
 <body data-theme="light">
   <div class="chat-container">
     <div class="chat-header">Ask Clara – A GenAI Assistant for Smarter Operations</div>
+    <div class="chat-subtitle">Clara knows your playbooks, so you don’t have to.</div>
 
     <div class="chat-history" id="chatHistory"></div>
 
-    <div class="typing" id="typingIndicator" style="display: none;">Clara is typing<span id="dots">.</span></div>
-
     <div class="input-container">
-      <input type="text" id="query" placeholder="Ask Clara something..." />
-      <button onclick="askBot()">➤</button>
+      <input type="text" id="query" placeholder="Ask Clara about operations, playbooks, or analytics..." />
+      <button onclick="askBot()">Send</button>
     </div>
 
-    <div class="utility-buttons">
-      <button onclick="resetChat()">♻ Reset</button>
-      <button onclick="downloadTranscript()">⬇ Download</button>
+    <div class="dark-mode-toggle">
+      <label><input type="checkbox" id="themeToggle" /> Dark Mode</label>
+      <span id="statusText">Clara is online</span>
     </div>
   </div>
 
   <script>
     const queryInput = document.getElementById("query");
     const chatHistory = document.getElementById("chatHistory");
-    const typingIndicator = document.getElementById("typingIndicator");
-
-    const transcriptLog = [];
-
-    function getTimestamp() {
-      return new Date().toLocaleTimeString();
-    }
-
-    function formatMarkdown(text) {
-      return text
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-        .replace(/_(.*?)_/g, "<em>$1</em>")
-        .replace(/`(.*?)`/g, "<code>$1</code>")
-        .replace(/\n/g, "<br>");
-    }
+    const themeToggle = document.getElementById("themeToggle");
+    const statusText = document.getElementById("statusText");
 
     function addMessage(text, sender) {
       const messageDiv = document.createElement("div");
@@ -189,35 +207,21 @@
 
       const avatar = document.createElement("div");
       avatar.className = `avatar avatar-${sender}`;
-      avatar.textContent = sender === "user" ? "👤" : "🤖";
+      avatar.textContent = sender === "user" ? "U" : "C";
 
-      const messageContent = document.createElement("div");
-      messageContent.className = "message-content";
+      const content = document.createElement("div");
+      content.className = "message-content";
 
       const bubble = document.createElement("div");
       bubble.className = `bubble bubble-${sender}`;
-      bubble.innerHTML = sender === "bot" ? formatMarkdown(text) : text;
+      bubble.textContent = text;
 
-      messageContent.appendChild(bubble);
+      content.appendChild(bubble);
       messageDiv.appendChild(avatar);
-      messageDiv.appendChild(messageContent);
+      messageDiv.appendChild(content);
       chatHistory.appendChild(messageDiv);
+
       chatHistory.scrollTop = chatHistory.scrollHeight;
-
-      transcriptLog.push(`[${getTimestamp()}] ${sender.toUpperCase()}: ${text}`);
-    }
-
-    function showTyping() {
-      typingIndicator.style.display = "block";
-      let dots = 1;
-      typingIndicator.dotsInterval = setInterval(() => {
-        document.getElementById("dots").textContent = ".".repeat((dots++ % 4) + 1);
-      }, 500);
-    }
-
-    function hideTyping() {
-      typingIndicator.style.display = "none";
-      clearInterval(typingIndicator.dotsInterval);
     }
 
     async function askBot() {
@@ -227,7 +231,7 @@
       addMessage(query, "user");
       queryInput.value = "";
 
-      showTyping();
+      const thinking = addMessage("Clara is thinking...", "bot");
 
       try {
         const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
@@ -236,44 +240,29 @@
           body: JSON.stringify({ query })
         });
 
-        const data = await res.json();
-
-        let answerText = "No response";
-
-        if (typeof data === "string") {
-          answerText = data;
-        } else if (Array.isArray(data.answer)) {
-          answerText = data.answer.map(item =>
-            typeof item === "string" ? item : item.text || JSON.stringify(item)
-          ).join("\n\n");
-        } else if (typeof data.answer === "string") {
-          answerText = data.answer;
-        } else if (data.message || data.response) {
-          answerText = data.message || data.response;
-        } else {
-          answerText = JSON.stringify(data, null, 2);
+        const rawText = await res.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { answer: rawText };
         }
 
-        addMessage(answerText, "bot");
+        thinking.remove();
+
+        let finalAnswer = data.answer || data.message || data.response || JSON.stringify(data, null, 2);
+        addMessage(finalAnswer, "bot");
+
       } catch (err) {
+        thinking.remove();
         addMessage(`⚠️ Error: ${err.message}`, "bot");
-      } finally {
-        hideTyping();
       }
     }
 
-    function resetChat() {
-      chatHistory.innerHTML = "";
-      transcriptLog.length = 0;
-    }
-
-    function downloadTranscript() {
-      const blob = new Blob([transcriptLog.join("\n")], { type: "text/plain" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `clara_chat_${new Date().toISOString().split("T")[0]}.txt`;
-      link.click();
-    }
+    themeToggle.addEventListener("change", function () {
+      const mode = this.checked ? "dark" : "light";
+      document.body.setAttribute("data-theme", mode);
+    });
 
     queryInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -281,6 +270,11 @@
         askBot();
       }
     });
+
+    // Initial welcome message
+    window.onload = () => {
+      addMessage("Hello! I'm Clara, your operations assistant. How can I help you today?", "bot");
+    };
   </script>
 </body>
 </html>
