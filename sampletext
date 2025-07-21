@@ -1,264 +1,196 @@
-// EMAX Genesis Pro: Clean Dashboard, No Open PnL
+h1. 📘 NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
 
-using System;
-using System.Windows.Media;
-using NinjaTrader.Cbi;
-using NinjaTrader.Gui.Tools;
-using NinjaTrader.Gui.Chart;
-using NinjaTrader.NinjaScript;
-using NinjaTrader.Data;
-using NinjaTrader.NinjaScript.Strategies;
-using NinjaTrader.NinjaScript.Indicators;
-using NinjaTrader.NinjaScript.DrawingTools;
+This playbook provides actionable steps to resolve common server issues across the *NimbusApp* architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
 
-namespace NinjaTrader.NinjaScript.Strategies
-{
-    public class EMAX_Genesis_Pro : Strategy
-    {
-        // --- Product-Style Properties ---
-        [NinjaScriptProperty]
-        public bool TradeGuardStandard { get; set; }
-        [NinjaScriptProperty]
-        public bool TradeGuardDynamic { get; set; }
-        [NinjaScriptProperty]
-        public bool TargetLock { get; set; }
-        [NinjaScriptProperty]
-        public bool SafetyNet { get; set; }
-        [NinjaScriptProperty]
-        public bool EnableSessionFilter { get; set; }
-        [NinjaScriptProperty]
-        public TimeSpan SessionStartTime { get; set; }
-        [NinjaScriptProperty]
-        public TimeSpan SessionEndTime { get; set; }
-        [NinjaScriptProperty]
-        public bool DailyGoalLock { get; set; }
-        [NinjaScriptProperty]
-        public double DailyProfitGoal { get; set; }
-        [NinjaScriptProperty]
-        public bool DailyRiskGuard { get; set; }
-        [NinjaScriptProperty]
-        public double DailyMaxLoss { get; set; }
-        [NinjaScriptProperty]
-        public bool ManualCloseAutoContinue { get; set; }
-        [NinjaScriptProperty]
-        public int TakeProfitTicks { get; set; }
-        [NinjaScriptProperty]
-        public int StopLossTicks { get; set; }
+This content is indexed for the *NimbusOps Chatbot*, which can answer contextually with specific command-line instructions and AWS console navigation.
 
-        // --- Internal ---
-        private EMA ema10, ema21, ema55;
-        private string lastSignal = "None";
-        private double sessionPnL = 0;
-        private double priorRealized = 0;
-        private DateTime currentSession = Core.Globals.MinDate;
-        private bool hitDailyProfit = false;
-        private bool hitDailyStop = false;
-        private bool manualFlatDetected = false;
-        private bool strategyInitiatedExit = false;
-        private MarketPosition lastMarketPosition = MarketPosition.Flat;
-        private bool tpArmed = false;
-        private bool slArmed = false;
+----
 
-        protected override void OnStateChange()
-        {
-            if (State == State.SetDefaults)
-            {
-                Name = "EMAX_Genesis_Pro";
-                Calculate = Calculate.OnBarClose;
-                IsOverlay = true;
-                TradeGuardStandard = true;
-                TradeGuardDynamic = false;
-                TargetLock = false;
-                SafetyNet = false;
-                EnableSessionFilter = false;
-                SessionStartTime = new TimeSpan(9, 30, 0); // 9:30 AM
-                SessionEndTime = new TimeSpan(16, 0, 0);   // 4:00 PM
-                DailyGoalLock = false;
-                DailyProfitGoal = 500.0;
-                DailyRiskGuard = false;
-                DailyMaxLoss = 500.0;
-                ManualCloseAutoContinue = false;
-                TakeProfitTicks = 40;
-                StopLossTicks = 20;
-            }
-            else if (State == State.DataLoaded)
-            {
-                ema10 = EMA(10);
-                ema21 = EMA(21);
-                ema55 = EMA(55);
-                sessionPnL = 0;
-                priorRealized = 0;
-                currentSession = Core.Globals.MinDate;
-                hitDailyProfit = false;
-                hitDailyStop = false;
-                manualFlatDetected = false;
-                strategyInitiatedExit = false;
-                lastMarketPosition = MarketPosition.Flat;
-                tpArmed = false;
-                slArmed = false;
-            }
-        }
+h2. 🏷️ Server Roles
 
-        protected override void OnBarUpdate()
-        {
-            if (CurrentBar < 55) return;
+|| Server || Role || Hostname/Tag ||
+| frontend01 | NimbusApp Web UI Server | Name=frontend01 |
+| frontend02 | NimbusApp API Gateway | Name=frontend02 |
+| backend01 | NimbusApp Core App Logic | Name=backend01 |
+| backend02 | NimbusApp Queue Processor | Name=backend02 |
+| db01 | NimbusApp PostgreSQL RDS | Name=db01 |
 
-            // --- Session Filter ---
-            if (EnableSessionFilter)
-            {
-                TimeSpan now = Time[0].TimeOfDay;
-                if (now < SessionStartTime || now > SessionEndTime)
-                    return; // Not in session
-            }
+----
 
-            // --- New Session Reset ---
-            DateTime barTime = Time[0];
-            if (currentSession.Date != barTime.Date)
-            {
-                sessionPnL = 0;
-                priorRealized = SystemPerformance.AllTrades.TradesPerformance.Currency.CumProfit;
-                hitDailyProfit = false;
-                hitDailyStop = false;
-                manualFlatDetected = false;
-                strategyInitiatedExit = false;
-                lastMarketPosition = MarketPosition.Flat;
-                lastSignal = "None";
-                tpArmed = false;
-                slArmed = false;
-            }
+h2. 🚨 Common Issues & Solutions by Server Type
 
-            // --- Update Session PnL ---
-            sessionPnL = SystemPerformance.AllTrades.TradesPerformance.Currency.CumProfit - priorRealized;
+----
 
-            // --- Daily Stop/Profit Enforcement ---
-            if (DailyGoalLock && !hitDailyProfit && sessionPnL >= DailyProfitGoal)
-            {
-                hitDailyProfit = true;
-                Print("Daily goal hit: Trading paused for today.");
-            }
-            if (DailyRiskGuard && !hitDailyStop && sessionPnL <= -Math.Abs(DailyMaxLoss))
-            {
-                hitDailyStop = true;
-                Print("Daily max loss hit: Trading paused for today.");
-            }
-            if ((hitDailyProfit || hitDailyStop) && Position.MarketPosition == MarketPosition.Flat)
-                return; // Don't enter new trades
+h3. 🖥️ Frontend Servers – frontend01, frontend02
 
-            // --- Manual Flat Detection (fixed) ---
-            if (lastMarketPosition != MarketPosition.Flat && Position.MarketPosition == MarketPosition.Flat)
-            {
-                if (!strategyInitiatedExit)
-                {
-                    manualFlatDetected = true;
-                    if (!ManualCloseAutoContinue)
-                    {
-                        Print("Manual flat detected: Strategy will now stop trading logic until next day.");
-                        lastMarketPosition = Position.MarketPosition; // update
-                        return;
-                    }
-                }
-                strategyInitiatedExit = false;
-            }
-            if (Position.MarketPosition != MarketPosition.Flat)
-                manualFlatDetected = false; // Reset as soon as a new position is open
+h4. 🔧 Issue: NimbusApp UI Not Loading (502/504)
 
-            lastMarketPosition = Position.MarketPosition;
+*Symptoms:*
+* Browser shows *502 Bad Gateway* or *504 Timeout*.
+* CloudFront/ALB shows targets as unhealthy.
 
-            // --- TP/SL Logic ---
-            if (Position.MarketPosition == MarketPosition.Flat)
-            {
-                // Disarm TP/SL (only when flat)
-                tpArmed = false;
-                slArmed = false;
-                SetProfitTarget(CalculationMode.Ticks, double.NaN);
-                SetStopLoss(CalculationMode.Ticks, double.NaN);
-            }
-            else
-            {
-                // Arm TP/SL ONCE after entry
-                if (!tpArmed && TargetLock)
-                {
-                    SetProfitTarget(CalculationMode.Ticks, TakeProfitTicks);
-                    tpArmed = true;
-                }
-                if (!slArmed && SafetyNet)
-                {
-                    SetStopLoss(CalculationMode.Ticks, StopLossTicks);
-                    slArmed = true;
-                }
-            }
+*Resolution:*
+# Go to *EC2 > Instances > frontend01* in AWS Console.
+# SSH into the instance:
+{code:bash}
+ssh ec2-user@<frontend01-ip>
+{code}
+# Check Nginx:
+{code:bash}
+sudo systemctl status nginx
+{code}
+# Restart if down:
+{code:bash}
+sudo systemctl restart nginx
+{code}
+# Validate ALB and run:
+{code:bash}
+curl -I https://frontend.nimbusapp.com
+{code}
 
-            // --- Entry Logic (Black Box) ---
-            if (!hitDailyProfit && !hitDailyStop && !manualFlatDetected)
-            {
-                if (CrossAbove(ema10, ema55, 1))
-                {
-                    EnterLong("Long");
-                    lastSignal = "Long";
-                    PlaySound(NinjaTrader.Core.Globals.InstallDir + @"\sounds\Alert3.wav");
-                }
-                if (CrossBelow(ema10, ema55, 1))
-                {
-                    EnterShort("Short");
-                    lastSignal = "Short";
-                    PlaySound(NinjaTrader.Core.Globals.InstallDir + @"\sounds\Alert3.wav");
-                }
-            }
+----
 
-            // --- Exit Logic (Standard/Dynamic) ---
-            if (Position.MarketPosition == MarketPosition.Long)
-            {
-                if (TradeGuardStandard && CrossBelow(ema10, ema55, 1))
-                {
-                    strategyInitiatedExit = true;
-                    ExitLong("StdExit");
-                    lastSignal = "Exit Long - Std";
-                }
-                if (TradeGuardDynamic && CrossBelow(ema10, ema21, 1))
-                {
-                    strategyInitiatedExit = true;
-                    ExitLong("DynExit");
-                    lastSignal = "Exit Long - Dynamic";
-                }
-            }
-            if (Position.MarketPosition == MarketPosition.Short)
-            {
-                if (TradeGuardStandard && CrossAbove(ema10, ema55, 1))
-                {
-                    strategyInitiatedExit = true;
-                    ExitShort("StdExit");
-                    lastSignal = "Exit Short - Std";
-                }
-                if (TradeGuardDynamic && CrossAbove(ema10, ema21, 1))
-                {
-                    strategyInitiatedExit = true;
-                    ExitShort("DynExit");
-                    lastSignal = "Exit Short - Dynamic";
-                }
-            }
-        }
+h4. 🔧 Issue: Blank Screen on React App
 
-        protected override void OnRender(ChartControl chartControl, ChartScale chartScale)
-        {
-            base.OnRender(chartControl, chartScale);
+*Resolution:*
+# SSH into frontend01:
+{code:bash}
+ssh ec2-user@<frontend01-ip>
+{code}
+# Check build directory:
+{code:bash}
+ls -l /var/www/html
+{code}
+# If empty, redeploy:
+{code:bash}
+cd /opt/deploy_scripts
+./deploy_frontend.sh
+{code}
 
-            string dashText =
-                "EMAX Genesis Pro\n" +
-                "Trade Guard: " + (TradeGuardDynamic ? "Dynamic" : "Standard") + "\n" +
-                "Session: " + (EnableSessionFilter ? $"{SessionStartTime:hh\\:mm}-{SessionEndTime:hh\\:mm}" : "All") + "\n" +
-                "Daily PnL: " + sessionPnL.ToString("C0") +
-                (DailyGoalLock ? $" | Goal: {DailyProfitGoal:C0}" : "") +
-                (DailyRiskGuard ? $" | Max Loss: -{DailyMaxLoss:C0}" : "") + "\n" +
-                "Status: " +
-                (hitDailyProfit ? "Goal Hit" : hitDailyStop ? "Max Loss Hit" : manualFlatDetected ? "Manual Close" : "Active") + "\n" +
-                "Position: " +
-                (Position.MarketPosition == MarketPosition.Long ? "Long" :
-                 Position.MarketPosition == MarketPosition.Short ? "Short" : "Flat") + "\n" +
-                "Avg Price: " +
-                (Position.MarketPosition != MarketPosition.Flat ? Position.AveragePrice.ToString("F2") : "—") + "\n" +
-                "Last Signal: " + lastSignal;
+----
 
-            Draw.TextFixed(this, "EMAX_DASH", dashText, TextPosition.BottomRight);
-        }
-    }
-}
+h3. 🔄 Backend Servers – backend01, backend02
+
+h4. 🔧 Issue: NimbusApp API Endpoints Timing Out
+
+*Symptoms:*
+* Frontend errors calling backend APIs.
+* No recent log activity.
+
+*Resolution:*
+# SSH into backend01:
+{code:bash}
+ssh ec2-user@<backend01-ip>
+{code}
+# Check app process:
+{code:bash}
+ps aux | grep app.py
+{code}
+# Restart if needed:
+{code:bash}
+sudo systemctl restart backend-app.service
+{code}
+# Confirm app health:
+{code:bash}
+curl http://localhost:8080/health
+{code}
+
+----
+
+h4. 🔧 Issue: NimbusApp Queue Not Processing
+
+*Symptoms:*
+* SQS/Redis queues backing up.
+* backend02 not processing jobs.
+
+*Resolution:*
+# SSH into backend02:
+{code:bash}
+ssh ec2-user@<backend02-ip>
+{code}
+# Check logs:
+{code:bash}
+tail -n 100 /var/log/worker.log
+{code}
+# Restart the service:
+{code:bash}
+sudo systemctl restart worker-queue.service
+{code}
+# Monitor process:
+{code:bash}
+watch "ps aux | grep worker"
+{code}
+
+----
+
+h3. 🗄️ Database Node – db01 (PostgreSQL RDS)
+
+h4. 🔧 Issue: NimbusApp Backend Fails to Connect to DB
+
+*Symptoms:*
+* Logs show *connection refused* or *timeout*.
+
+*Resolution:*
+# Go to *RDS > db01* in AWS Console.
+# Check status: *Available*.
+# Ensure SG allows port 5432 from backend SG.
+# From backend01, test:
+{code:bash}
+psql -h <db-host> -U nimbus_user -d nimbus_db
+{code}
+
+----
+
+h4. 🔧 Issue: High CPU / Long Query Times
+
+*Resolution:*
+# Go to *Performance Insights > db01*.
+# Identify top queries.
+# Run in psql:
+{code:sql}
+SELECT pid, state, query FROM pg_stat_activity WHERE state != 'idle';
+{code}
+# Kill long-running query:
+{code:sql}
+SELECT pg_terminate_backend(<pid>);
+{code}
+
+----
+
+h2. ✅ Cheat Sheet – Validation Commands
+
+|| Purpose || Command ||
+| App health | {code}curl http://localhost:8080/health{code} |
+| Restart backend | {code}sudo systemctl restart backend-app.service{code} |
+| Logs (frontend) | {code}tail -n 100 /var/log/nginx/access.log{code} |
+| Logs (backend) | {code}tail -n 100 /var/log/backend-app/app.log{code} |
+| DB test | {code}psql -h <hostname> -U nimbus_user -d nimbus_db{code} |
+
+----
+
+h2. 🧪 Admin Automation Scripts
+
+|| Action || Script ||
+| Server recovery | /admin/scripts/recover_server.sh <servername> |
+| Restart Nginx | /admin/scripts/nginx_restart.sh frontend01 |
+| Health check app | /opt/app/scripts/check_health.sh |
+
+----
+
+h2. 📞 Escalation Protocol
+
+If issue persists >15 mins:
+* Post in *#oncall-nimbus*
+* Include:
+** Server name
+** Symptoms
+** Logs / errors
+** Troubleshooting steps taken
+
+----
+
+h2. 🔍 Sample Chatbot Queries It Can Answer
+
+* “NimbusApp backend02 is not processing messages”
+* “Why is the NimbusApp UI not loading?”
+* “Database is timing out for NimbusApp”
