@@ -1,196 +1,176 @@
-h1. 📘 NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
+📘 Confluence Page: NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
 
-This playbook provides actionable steps to resolve common server issues across the *NimbusApp* architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
+(Slug: playbooks/nimbusapp-server-troubleshooting)
 
-This content is indexed for the *NimbusOps Chatbot*, which can answer contextually with specific command-line instructions and AWS console navigation.
+⸻
 
-----
+🧠 Summary
 
-h2. 🏷️ Server Roles
+This playbook provides actionable steps to resolve common server issues across the NimbusApp architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
 
-|| Server || Role || Hostname/Tag ||
-| frontend01 | NimbusApp Web UI Server | Name=frontend01 |
-| frontend02 | NimbusApp API Gateway | Name=frontend02 |
-| backend01 | NimbusApp Core App Logic | Name=backend01 |
-| backend02 | NimbusApp Queue Processor | Name=backend02 |
-| db01 | NimbusApp PostgreSQL RDS | Name=db01 |
+This content is indexed for the NimbusOps Chatbot, which can answer contextually with specific command-line instructions and AWS console navigation.
 
-----
+🏷️ Server Roles
+Server
+Role
+Hostname/Tag
+frontend01
+NimbusApp Web UI Server
+Name=frontend01
+frontend02
+NimbusApp API Gateway
+Name=frontend02
+backend01
+NimbusApp Core App Logic
+Name=backend01
+backend02
+NimbusApp Queue Processor
+Name=backend02
+db01
+NimbusApp PostgreSQL RDS
+Name=db01
 
-h2. 🚨 Common Issues & Solutions by Server Type
+🚨 Common Issues & Solutions by Server Type
 
-----
+⸻
 
-h3. 🖥️ Frontend Servers – frontend01, frontend02
+🖥️ Frontend Servers – frontend01, frontend02
 
-h4. 🔧 Issue: NimbusApp UI Not Loading (502/504)
+⸻
 
-*Symptoms:*
-* Browser shows *502 Bad Gateway* or *504 Timeout*.
-* CloudFront/ALB shows targets as unhealthy.
+🔧 Issue: NimbusApp UI Not Loading (502/504)
 
-*Resolution:*
-# Go to *EC2 > Instances > frontend01* in AWS Console.
-# SSH into the instance:
-{code:bash}
+Symptoms:
+	•	Browser shows 502 Bad Gateway or 504 Timeout.
+	•	CloudFront/ALB shows targets as unhealthy.
+
+Resolution:
+	1.	Navigate to EC2 > Instances > frontend01 in AWS Console.
+	2.	SSH into the instance:
 ssh ec2-user@<frontend01-ip>
-{code}
-# Check Nginx:
-{code:bash}
+3.	Check Nginx:
 sudo systemctl status nginx
-{code}
-# Restart if down:
-{code:bash}
+4.	Restart if down:
 sudo systemctl restart nginx
-{code}
-# Validate ALB and run:
-{code:bash}
+5.	Validate ALB health checks and run:
 curl -I https://frontend.nimbusapp.com
-{code}
 
-----
+🔧 Issue: Blank Screen on React App
 
-h4. 🔧 Issue: Blank Screen on React App
+Symptoms:
+	•	React build deployed, but nothing shows on browser.
 
-*Resolution:*
-# SSH into frontend01:
-{code:bash}
+Resolution:
+	1.	SSH into frontend01:
 ssh ec2-user@<frontend01-ip>
-{code}
-# Check build directory:
-{code:bash}
+	2.	Check if build folder exists:
 ls -l /var/www/html
-{code}
-# If empty, redeploy:
-{code:bash}
+	3.	If empty, redeploy:
 cd /opt/deploy_scripts
 ./deploy_frontend.sh
-{code}
+🔄 Backend Servers – backend01, backend02
 
-----
+⸻
 
-h3. 🔄 Backend Servers – backend01, backend02
+🔧 Issue: NimbusApp API Endpoints Timing Out
 
-h4. 🔧 Issue: NimbusApp API Endpoints Timing Out
+Symptoms:
+	•	Frontend errors calling backend APIs.
+	•	No recent log activity.
 
-*Symptoms:*
-* Frontend errors calling backend APIs.
-* No recent log activity.
-
-*Resolution:*
-# SSH into backend01:
-{code:bash}
+Resolution:
+	1.	SSH into backend01:
 ssh ec2-user@<backend01-ip>
-{code}
-# Check app process:
-{code:bash}
+2.	Check app process:
 ps aux | grep app.py
-{code}
-# Restart if needed:
-{code:bash}
+3.	If not running:
 sudo systemctl restart backend-app.service
-{code}
-# Confirm app health:
-{code:bash}
+4.	Confirm recovery:
 curl http://localhost:8080/health
-{code}
 
-----
+🔧 Issue: NimbusApp Queue Not Processing
 
-h4. 🔧 Issue: NimbusApp Queue Not Processing
+Symptoms:
+	•	SQS/Redis queues backing up.
+	•	backend02 not consuming tasks.
 
-*Symptoms:*
-* SQS/Redis queues backing up.
-* backend02 not processing jobs.
-
-*Resolution:*
-# SSH into backend02:
-{code:bash}
+Resolution:
+	1.	SSH into backend02:
 ssh ec2-user@<backend02-ip>
-{code}
-# Check logs:
-{code:bash}
+2.	Check logs:
 tail -n 100 /var/log/worker.log
-{code}
-# Restart the service:
-{code:bash}
+	3.	Restart the queue processor:
 sudo systemctl restart worker-queue.service
-{code}
-# Monitor process:
-{code:bash}
+4.	Monitor:
 watch "ps aux | grep worker"
-{code}
 
-----
+🗄️ Database Node – db01 (PostgreSQL RDS)
 
-h3. 🗄️ Database Node – db01 (PostgreSQL RDS)
+⸻
 
-h4. 🔧 Issue: NimbusApp Backend Fails to Connect to DB
+🔧 Issue: NimbusApp Backend Fails to Connect to DB
 
-*Symptoms:*
-* Logs show *connection refused* or *timeout*.
+Symptoms:
+	•	Logs show connection refused or timeout.
 
-*Resolution:*
-# Go to *RDS > db01* in AWS Console.
-# Check status: *Available*.
-# Ensure SG allows port 5432 from backend SG.
-# From backend01, test:
-{code:bash}
+Resolution:
+	1.	Open RDS > db01 in AWS Console.
+	2.	Check status: should be Available.
+	3.	Review security groups: must allow port 5432 from backend SG.
+	4.	From backend01, test:
+
 psql -h <db-host> -U nimbus_user -d nimbus_db
-{code}
 
-----
+🔧 Issue: High CPU / Long Query Times
 
-h4. 🔧 Issue: High CPU / Long Query Times
-
-*Resolution:*
-# Go to *Performance Insights > db01*.
-# Identify top queries.
-# Run in psql:
-{code:sql}
+Resolution:
+	1.	Open Performance Insights > db01.
+	2.	Identify top queries.
+	3.	From psql:
 SELECT pid, state, query FROM pg_stat_activity WHERE state != 'idle';
-{code}
-# Kill long-running query:
-{code:sql}
+
+4.	Kill problem query:
 SELECT pg_terminate_backend(<pid>);
-{code}
 
-----
+✅ Cheat Sheet – Validation Commands
 
-h2. ✅ Cheat Sheet – Validation Commands
+Purpose
+Command
+App health
+curl http://localhost:8080/health
+Restart app
+sudo systemctl restart backend-app.service
+Logs (frontend)
+tail -n 100 /var/log/nginx/access.log
+Logs (backend)
+tail -n 100 /var/log/backend-app/app.log
+DB connect test
+psql -h <hostname> -U nimbus_user -d nimbus_db
 
-|| Purpose || Command ||
-| App health | {code}curl http://localhost:8080/health{code} |
-| Restart backend | {code}sudo systemctl restart backend-app.service{code} |
-| Logs (frontend) | {code}tail -n 100 /var/log/nginx/access.log{code} |
-| Logs (backend) | {code}tail -n 100 /var/log/backend-app/app.log{code} |
-| DB test | {code}psql -h <hostname> -U nimbus_user -d nimbus_db{code} |
+Admin Automation Scripts
+Action
+Script
+Server recovery
+/admin/scripts/recover_server.sh <servername>
+Restart Nginx
+/admin/scripts/nginx_restart.sh frontend01
+Health check app
+/opt/app/scripts/check_health.sh
 
-----
+Escalation Protocol
 
-h2. 🧪 Admin Automation Scripts
+If issue persists after 15 minutes:
+	•	Post in #oncall-nimbus with:
+	•	🔹 Server name
+	•	🔹 Issue symptoms
+	•	🔹 Logs or error messages
+	•	🔹 Steps already taken
 
-|| Action || Script ||
-| Server recovery | /admin/scripts/recover_server.sh <servername> |
-| Restart Nginx | /admin/scripts/nginx_restart.sh frontend01 |
-| Health check app | /opt/app/scripts/check_health.sh |
 
-----
 
-h2. 📞 Escalation Protocol
 
-If issue persists >15 mins:
-* Post in *#oncall-nimbus*
-* Include:
-** Server name
-** Symptoms
-** Logs / errors
-** Troubleshooting steps taken
 
-----
 
-h2. 🔍 Sample Chatbot Queries It Can Answer
 
-* “NimbusApp backend02 is not processing messages”
-* “Why is the NimbusApp UI not loading?”
-* “Database is timing out for NimbusApp”
+
+
