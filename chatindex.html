@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ask Clara – A GenAI Assistant</title>
+  <style>
+    :root {
+      --primary: #6d28d9;
+      --primary-dark: #5b21b6;
+      --bot-bubble: #e0e7ff;
+      --user-bubble: #dbeafe;
+      --border-light: #dee2e6;
+      --bg-light: #f8f9fa;
+      --text-light: #212529;
+    }
+
+    [data-theme="light"] {
+      --bg: var(--bg-light);
+      --text: var(--text-light);
+      --card: white;
+      --card-border: var(--border-light);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .chat-container {
+      max-width: 700px;
+      margin: auto;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      background: var(--card);
+    }
+
+    .chat-header {
+      font-weight: bold;
+      font-size: 1.25rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .chat-history {
+      max-height: 500px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      display: flex;
+      max-width: 90%;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+
+    .avatar-user {
+      background: var(--primary);
+      color: white;
+    }
+
+    .avatar-bot {
+      background: var(--bot-bubble);
+      color: black;
+    }
+
+    .message-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .bubble {
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      white-space: pre-wrap;
+    }
+
+    .bubble-user {
+      background: var(--user-bubble);
+      color: var(--primary-dark);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-bot {
+      background: var(--bot-bubble);
+      color: black;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing {
+      font-style: italic;
+      font-size: 0.875rem;
+      padding-left: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    #query {
+      flex-grow: 1;
+      padding: 0.5rem;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .utility-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="chat-container">
+    <div class="chat-header">Ask Clara – A GenAI Assistant for Smarter Operations</div>
+
+    <div class="chat-history" id="chatHistory"></div>
+
+    <div class="typing" id="typingIndicator" style="display: none;">Clara is typing<span id="dots">.</span></div>
+
+    <div class="input-container">
+      <input type="text" id="query" placeholder="Ask Clara something..." />
+      <button onclick="askBot()">➤</button>
+    </div>
+
+    <div class="utility-buttons">
+      <button onclick="resetChat()">♻ Reset</button>
+      <button onclick="downloadTranscript()">⬇ Download</button>
+    </div>
+  </div>
+
+  <script>
+    const queryInput = document.getElementById("query");
+    const chatHistory = document.getElementById("chatHistory");
+    const typingIndicator = document.getElementById("typingIndicator");
+
+    const transcriptLog = [];
+
+    function getTimestamp() {
+      return new Date().toLocaleTimeString();
+    }
+
+    function formatMarkdown(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/_(.*?)_/g, "<em>$1</em>")
+        .replace(/`(.*?)`/g, "<code>$1</code>")
+        .replace(/\n/g, "<br>");
+    }
+
+    function addMessage(text, sender) {
+      const messageDiv = document.createElement("div");
+      messageDiv.className = "message";
+
+      const avatar = document.createElement("div");
+      avatar.className = `avatar avatar-${sender}`;
+      avatar.textContent = sender === "user" ? "👤" : "🤖";
+
+      const messageContent = document.createElement("div");
+      messageContent.className = "message-content";
+
+      const bubble = document.createElement("div");
+      bubble.className = `bubble bubble-${sender}`;
+      bubble.innerHTML = sender === "bot" ? formatMarkdown(text) : text;
+
+      messageContent.appendChild(bubble);
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(messageContent);
+      chatHistory.appendChild(messageDiv);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      transcriptLog.push(`[${getTimestamp()}] ${sender.toUpperCase()}: ${text}`);
+    }
+
+    function showTyping() {
+      typingIndicator.style.display = "block";
+      let dots = 1;
+      typingIndicator.dotsInterval = setInterval(() => {
+        document.getElementById("dots").textContent = ".".repeat((dots++ % 4) + 1);
+      }, 500);
+    }
+
+    function hideTyping() {
+      typingIndicator.style.display = "none";
+      clearInterval(typingIndicator.dotsInterval);
+    }
+
+    async function askBot() {
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      addMessage(query, "user");
+      queryInput.value = "";
+
+      showTyping();
+
+      try {
+        const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
+
+        const data = await res.json();
+
+        let answerText = "No response";
+
+        if (typeof data === "string") {
+          answerText = data;
+        } else if (Array.isArray(data.answer)) {
+          answerText = data.answer.map(item =>
+            typeof item === "string" ? item : item.text || JSON.stringify(item)
+          ).join("\n\n");
+        } else if (typeof data.answer === "string") {
+          answerText = data.answer;
+        } else if (data.message || data.response) {
+          answerText = data.message || data.response;
+        } else {
+          answerText = JSON.stringify(data, null, 2);
+        }
+
+        addMessage(answerText, "bot");
+      } catch (err) {
+        addMessage(`⚠️ Error: ${err.message}`, "bot");
+      } finally {
+        hideTyping();
+      }
+    }
+
+    function resetChat() {
+      chatHistory.innerHTML = "";
+      transcriptLog.length = 0;
+    }
+
+    function downloadTranscript() {
+      const blob = new Blob([transcriptLog.join("\n")], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `clara_chat_${new Date().toISOString().split("T")[0]}.txt`;
+      link.click();
+    }
+
+    queryInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        askBot();
+      }
+    });
+  </script>
+</body>
+</html>
