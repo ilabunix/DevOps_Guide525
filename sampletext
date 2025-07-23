@@ -1,308 +1,188 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ask Clara – A GenAI Assistant</title>
-  <style>
-    :root {
-      --primary: #6d28d9;
-      --primary-light: #a58cfc;
-      --primary-dark: #521bd6;
-      --bg-light: #f0f3f8;
-      --bg-dark: #111827;
-      --text-light: #1f2937;
-      --text-dark: #f1f1f1;
-      --user-bubble: #007aff;
-      --bot-bubble: #e0e0e0;
-      --border-light: #ccc;
-    }
+📘 Confluence Page: NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: var(--bg-light);
-      color: var(--text-light);
-      margin: 0;
-      padding: 0;
-      transition: background 0.3s, color 0.3s;
-    }
+(Slug: playbooks/nimbusapp-server-troubleshooting)
 
-    body.dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
-    }
+⸻
 
-    .chat-container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      background: white;
-      overflow: hidden;
-    }
+🧠 Summary
 
-    body.dark .chat-container {
-      background: #1e1e2f;
-    }
+This playbook provides actionable steps to resolve common server issues across the NimbusApp architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
 
-    .chat-header {
-      padding: 1rem;
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
-      color: white;
-    }
+This content is indexed for the NimbusOps Chatbot, which can answer contextually with specific command-line instructions and AWS console navigation.
 
-    .chat-header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-    }
+🏷️ Server Roles
 
-    .chat-header p {
-      margin: 0.25rem 0 0;
-      font-size: 0.875rem;
-      opacity: 0.9;
-    }
+Server
+Role
+Hostname/Tag
+frontend01
+NimbusApp Web UI Server
+Name=frontend01
+frontend02
+NimbusApp API Gateway
+Name=frontend02
+backend01
+NimbusApp Core App Logic
+Name=backend01
+backend02
+NimbusApp Queue Processor
+Name=backend02
+db01
+NimbusApp PostgreSQL RDS
+Name=db01
 
-    .chat-history {
-      padding: 1rem;
-      max-height: 600px;
-      overflow-y: auto;
-    }
+🚨 Common Issues & Solutions by Server Type
 
-    .message {
-      display: flex;
-      margin-bottom: 1rem;
-    }
+⸻
 
-    .message.bot {
-      flex-direction: row;
-    }
+🖥️ Frontend Servers – frontend01, frontend02
 
-    .message.user {
-      flex-direction: row-reverse;
-    }
+⸻
 
-    .avatar {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      margin: 0 0.5rem;
-    }
+🔧 Issue: NimbusApp UI Not Loading (502/504)
 
-    .message-bubble {
-      background: #f1f1f1;
-      padding: 0.75rem 1rem;
-      border-radius: 1rem;
-      max-width: 80%;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
+Symptoms:
+	•	Browser shows 502 Bad Gateway or 504 Timeout.
+	•	CloudFront/ALB shows targets as unhealthy.
 
-    body.dark .message-bubble {
-      background: #333a4a;
-      color: white;
-    }
+Resolution:
+	1.	Navigate to EC2 > Instances > frontend01 in AWS Console.
+	2.	SSH into the instance:
+ssh ec2-user@<frontend01-ip>
+	3.	Check Nginx:
+sudo systemctl status nginx
 
-    .input-area {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1rem;
-      border-top: 1px solid var(--border-light);
-    }
+4.	Restart if down:
+sudo systemctl restart nginx
+	5.	Validate ALB health checks and run:
+curl -I https://frontend.nimbusapp.com
 
-    .input-area input {
-      flex-grow: 1;
-      padding: 0.5rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
+🔧 Issue: Blank Screen on React App
 
-    .input-area button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
+Symptoms:
+	•	React build deployed, but nothing shows on browser.
 
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      padding: 0 1rem 1rem;
-      font-size: 0.9rem;
-    }
+Resolution:
+	1.	SSH into frontend01:
+ssh ec2-user@<frontend01-ip>
+2.	Check if build folder exists:
+ls -l /var/www/html
+3.	If empty, redeploy:
+cd /opt/deploy_scripts
+./deploy_frontend.sh
 
-    .controls label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+🔄 Backend Servers – backend01, backend02
 
-    .controls button {
-      padding: 0.4rem 0.75rem;
-      border: none;
-      border-radius: 6px;
-      background: #444;
-      color: white;
-      cursor: pointer;
-    }
+⸻
 
-    .controls button:hover {
-      background: #333;
-    }
+🔧 Issue: NimbusApp API Endpoints Timing Out
 
-    .typing-indicator {
-      font-family: monospace;
-      font-size: 1.2rem;
-      animation: blink 1s infinite steps(1, start);
-    }
+Symptoms:
+	•	Frontend errors calling backend APIs.
+	•	No recent log activity.
 
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-  </style>
-</head>
-<body class="light">
-  <div class="chat-container">
-    <div class="chat-header">
-      <h1>Ask Clara – A GenAI Assistant for Smarter Operations</h1>
-      <p>Clara knows your playbooks, so you don’t have to.</p>
-    </div>
+Resolution:
+	1.	SSH into backend01:
+ssh ec2-user@<backend01-ip>
+2.	Check app process:
+ps aux | grep app.py
+3.	If not running:
+sudo systemctl restart backend-app.service
+4.	Confirm recovery:
+curl http://localhost:8080/health
 
-    <div class="chat-history" id="chatHistory">
-      <!-- Messages will go here -->
-    </div>
+🔧 Issue: NimbusApp Queue Not Processing
 
-    <div class="input-area">
-      <input type="text" id="query" placeholder="Ask Clara..." />
-      <button onclick="askClara()">Send</button>
-    </div>
+Symptoms:
+	•	SQS/Redis queues backing up.
+	•	backend02 not consuming tasks.
 
-    <div class="controls">
-      <div>
-        <button onclick="resetChat()">Reset Chat</button>
-        <button onclick="downloadChat()">Download Chat</button>
-      </div>
-      <label>
-        <input type="checkbox" id="themeToggle" />
-        Dark Mode
-      </label>
-    </div>
-  </div>
+Resolution:
+	1.	SSH into backend02:
+ssh ec2-user@<backend02-ip>
+	2.	Check logs:
+tail -n 100 /var/log/worker.log
+3.	Restart the queue processor:
+sudo systemctl restart worker-queue.service
+4.	Monitor:
+watch "ps aux | grep worker"
 
-  <script>
-    const chatHistory = document.getElementById("chatHistory");
-    const queryInput = document.getElementById("query");
-    const themeToggle = document.getElementById("themeToggle");
 
-    function addMessage(text, sender) {
-      const message = document.createElement("div");
-      message.className = "message " + sender;
+🗄️ Database Node – db01 (PostgreSQL RDS)
 
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = sender === "user" ? "U" : "C";
+⸻
 
-      const bubble = document.createElement("div");
-      bubble.className = "message-bubble";
-      bubble.textContent = typeof text === "object" ? JSON.stringify(text) : text;
+🔧 Issue: NimbusApp Backend Fails to Connect to DB
 
-      message.appendChild(avatar);
-      message.appendChild(bubble);
-      chatHistory.appendChild(message);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
+Symptoms:
+	•	Logs show connection refused or timeout.
 
-    async function askClara() {
-      const query = queryInput.value.trim();
-      if (!query) return;
+Resolution:
+	1.	Open RDS > db01 in AWS Console.
+	2.	Check status: should be Available.
+	3.	Review security groups: must allow port 5432 from backend SG.
+	4.	From backend01, test:
+psql -h <db-host> -U nimbus_user -d nimbus_db
 
-      addMessage(query, "user");
-      queryInput.value = "";
+🔧 Issue: High CPU / Long Query Times
 
-      // Add loading animation
-      const loading = document.createElement("div");
-      loading.className = "message bot";
-      loading.innerHTML = `<div class="avatar">C</div><div class="message-bubble"><span class="typing-indicator">Clara is typing...</span></div>`;
-      chatHistory.appendChild(loading);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
+Resolution:
+	1.	Open Performance Insights > db01.
+	2.	Identify top queries.
+	3.	From psql:
+SELECT pid, state, query FROM pg_stat_activity WHERE state != 'idle';
 
-      try {
-        const res = await fetch("https://<your-api-url>.amazonaws.com/prod/chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
-        });
+	4.	Kill problem query:
+SELECT pg_terminate_backend(<pid>);
 
-        const raw = await res.text();
-        let data;
-        try {
-          data = JSON.parse(raw);
-        } catch (e) {
-          data = raw;
-        }
 
-        chatHistory.lastChild.remove(); // remove loading
-        let answer = "";
+⸻
 
-        if (typeof data === "string") {
-          answer = data;
-        } else if (Array.isArray(data.answer)) {
-          answer = data.answer.map(item => item.text || "").join("\n").trim();
-        } else if (typeof data.answer === "string") {
-          answer = data.answer;
-        } else if (data.message) {
-          answer = data.message;
-        } else if (data.response) {
-          answer = data.response;
-        } else {
-          answer = JSON.stringify(data);
-        }
+✅ Cheat Sheet – Validation Commands
+Purpose
+Command
+App health
+curl http://localhost:8080/health
+Restart app
+sudo systemctl restart backend-app.service
+Logs (frontend)
+tail -n 100 /var/log/nginx/access.log
+Logs (backend)
+tail -n 100 /var/log/backend-app/app.log
+DB connect test
+psql -h <hostname> -U nimbus_user -d nimbus_db
 
-        addMessage(answer || "Sorry, I couldn't find an answer.", "bot");
-      } catch (err) {
-        chatHistory.lastChild.remove();
-        addMessage("⚠️ Error: " + err.message, "bot");
-      }
-    }
 
-    function resetChat() {
-      chatHistory.innerHTML = "";
-    }
+⸻
 
-    function downloadChat() {
-      const text = Array.from(chatHistory.querySelectorAll(".message")).map(m => {
-        const who = m.classList.contains("user") ? "You" : "Clara";
-        const msg = m.querySelector(".message-bubble").textContent;
-        return `${who}: ${msg}`;
-      }).join("\n");
+🧪 Admin Automation Scripts
+Action
+Script
+Server recovery
+/admin/scripts/recover_server.sh <servername>
+Restart Nginx
+/admin/scripts/nginx_restart.sh frontend01
+Health check app
+/opt/app/scripts/check_health.sh
 
-      const blob = new Blob([text], { type: "text/plain" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "clara_chat.txt";
-      link.click();
-    }
+📞 Escalation Protocol
 
-    themeToggle.addEventListener("change", function () {
-      document.body.className = this.checked ? "dark" : "light";
-    });
+If issue persists after 15 minutes:
+	•	Post in #oncall-nimbus with:
+	•	🔹 Server name
+	•	🔹 Issue symptoms
+	•	🔹 Logs or error messages
+	•	🔹 Steps already taken
 
-    queryInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") askClara();
-    });
+⸻
 
-    // Initial welcome message
-    addMessage("Hello! I'm Clara, your operations assistant. How can I help you today?", "bot");
-  </script>
-</body>
-</html>
+🔍 Example Queries the Chatbot Can Now Answer Precisely
+
+“NimbusApp backend02 is not processing messages”
+→ “Try restarting worker-queue.service on backend02 using sudo systemctl restart worker-queue.service. Check /var/log/worker.log for any job errors.”
+
+“Why is the NimbusApp UI not loading?”
+→ “Check if Nginx is running on frontend01. If it’s down, restart it using sudo systemctl restart nginx and validate using curl -I.”
+
+“Database is timing out for NimbusApp”
+→ “Ensure db01 is running and that port 5432 is allowed from backend SG. You can test from backend01 with: psql -h <db-host> -U nimbus_user -d nimbus_db.”
