@@ -1,76 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ask Clara – A GenAI Assistant</title>
+  <title>Ask Clara – A GenAI Assistant for Smarter Operations</title>
   <style>
     :root {
       --primary: #6d28d9;
-      --primary-light: #a58cf6;
+      --primary-light: #a855f7;
       --primary-dark: #5b21b6;
-      --bg-light: #f8f9fa;
-      --bg-dark: #1f1f1f;
-      --text-light: #212529;
-      --text-dark: #f1f1f1;
-      --bot-bubble: #e0e7ff;
-      --user-bubble: #dbeafe;
-      --border-light: #ccc;
+      --bubble-bot: #f4f4f5;
+      --bubble-user: #c7d2fe;
+      --bg-light: #ffffff;
+      --bg-dark: #1f2937;
+      --text-light: #f9fafb;
+      --text-dark: #111827;
+    }
+
+    [data-theme='dark'] {
+      --bg: var(--bg-dark);
+      --text: var(--text-light);
+      --card: #374151;
+    }
+
+    [data-theme='light'] {
+      --bg: var(--bg-light);
+      --text: var(--text-dark);
+      --card: #ffffff;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      padding: 0;
-      background: var(--bg-light);
-      color: var(--text-light);
-      transition: background 0.3s, color 0.3s;
-    }
-
-    body.dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
     }
 
     .chat-container {
+      width: 100%;
       max-width: 800px;
-      margin: 2rem auto;
+      background-color: var(--card);
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      background: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
-    body.dark .chat-container {
-      background: #2a2a2a;
-    }
-
     .chat-header {
-      padding: 1rem;
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      background: linear-gradient(to right, var(--primary), var(--primary-light));
       color: white;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
     }
 
-    .chat-header h1 {
-      margin: 0;
-      font-size: 1.25rem;
+    .chat-header .title {
+      font-weight: 700;
+      font-size: 1.1rem;
     }
 
-    .chat-header p {
-      margin: 0.25rem 0 0;
-      font-size: 0.875rem;
+    .chat-header .subtitle {
+      font-size: 0.9rem;
+      margin-top: 2px;
       opacity: 0.9;
     }
 
-    .chat-history {
+    .messages {
+      flex-grow: 1;
       padding: 1rem;
-      max-height: 500px;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
 
     .message {
       display: flex;
-      margin-bottom: 1rem;
+      max-width: 100%;
+      align-items: flex-start;
     }
 
     .message.bot {
@@ -82,195 +92,208 @@
     }
 
     .avatar {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 50%;
-      background: var(--primary);
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary);
       color: white;
+      font-weight: bold;
+      font-size: 0.875rem;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
       margin: 0 0.5rem;
     }
 
-    .message-bubble {
-      background: #f1f1f1;
+    .bubble {
       padding: 0.75rem 1rem;
-      border-radius: 1rem;
-      max-width: 70%;
+      border-radius: 12px;
       line-height: 1.5;
-      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      max-width: 75%;
+      word-wrap: break-word;
     }
 
-    body.dark .message-bubble {
-      background: #3a3a3a;
-      color: white;
+    .message.bot .bubble {
+      background-color: var(--bubble-bot);
+    }
+
+    .message.user .bubble {
+      background-color: var(--bubble-user);
     }
 
     .input-area {
       display: flex;
-      align-items: center;
       gap: 0.5rem;
       padding: 1rem;
-      border-top: 1px solid var(--border-light);
+      border-top: 1px solid #e5e7eb;
+      background-color: var(--card);
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .input-area input {
-      flex-grow: 1;
-      padding: 0.5rem;
+      flex: 1;
+      padding: 0.75rem;
       border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     .input-area button {
-      background: var(--primary);
+      background-color: var(--primary);
       color: white;
+      padding: 0.6rem 1rem;
       border: none;
       border-radius: 8px;
-      padding: 0.5rem 1rem;
       cursor: pointer;
     }
 
-    .controls {
+    .toolbar {
       display: flex;
       justify-content: space-between;
-      padding: 0 1rem 1rem;
-      font-size: 0.9rem;
+      width: 100%;
+      padding: 0 0.25rem;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
     }
 
-    .controls label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .controls button {
+    .toolbar button, .toolbar label {
+      background-color: #111827;
+      color: #f9fafb;
       padding: 0.4rem 0.75rem;
-      border: none;
       border-radius: 6px;
-      background: #444;
-      color: white;
+      border: none;
       cursor: pointer;
+      margin-right: 0.5rem;
     }
 
-    .controls button:hover {
-      background: #333;
+    .toolbar input[type="checkbox"] {
+      margin-left: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .chat-container {
+        border-radius: 0;
+      }
+
+      .bubble {
+        max-width: 90%;
+      }
     }
   </style>
 </head>
-<body class="light">
+<body>
   <div class="chat-container">
     <div class="chat-header">
-      <h1>Ask Clara – A GenAI Assistant for Smarter Operations</h1>
-      <p>Clara knows your playbooks, so you don’t have to.</p>
+      <div class="title">Ask Clara – A GenAI Assistant for Smarter Operations</div>
+      <div class="subtitle">Clara knows your playbooks, so you don’t have to.</div>
     </div>
-
-    <div class="chat-history" id="chatHistory">
-      <!-- Messages will go here -->
+    <div class="messages" id="chatLog">
+      <div class="message bot">
+        <div class="avatar">C</div>
+        <div class="bubble">Hello! I'm Clara, your operations assistant. How can I help you today?</div>
+      </div>
     </div>
-
     <div class="input-area">
-      <input type="text" id="query" placeholder="Ask Clara..." />
-      <button onclick="askClara()">Send</button>
-    </div>
-
-    <div class="controls">
-      <div>
+      <input type="text" id="userInput" placeholder="Ask Clara…" />
+      <button onclick="sendMessage()">Send</button>
+      <div class="toolbar">
         <button onclick="resetChat()">Reset Chat</button>
         <button onclick="downloadChat()">Download Chat</button>
+        <label>
+          <input type="checkbox" onchange="toggleDarkMode()"> Dark Mode
+        </label>
       </div>
-      <label>
-        <input type="checkbox" id="themeToggle" /> Dark Mode
-      </label>
     </div>
   </div>
 
   <script>
-    const chatHistory = document.getElementById("chatHistory");
-    const queryInput = document.getElementById("query");
-    const themeToggle = document.getElementById("themeToggle");
+    const chatLog = document.getElementById('chatLog');
+    const userInput = document.getElementById('userInput');
 
-    function addMessage(text, sender) {
-      const message = document.createElement("div");
-      message.className = `message ${sender}`;
-
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = sender === "bot" ? "C" : "U";
-
-      const bubble = document.createElement("div");
-      bubble.className = "message-bubble";
-      bubble.textContent = typeof text === 'object' ? JSON.stringify(text) : text;
-
-      message.appendChild(avatar);
-      message.appendChild(bubble);
-      chatHistory.appendChild(message);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
-
-    async function askClara() {
-      const query = queryInput.value.trim();
-      if (!query) return;
-      addMessage(query, "user");
-      queryInput.value = "";
-      addMessage("Clara is thinking...", "bot");
-
-      try {
-        const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ query })
-        });
-
-        const raw = await res.text();
-        let data;
-        try {
-          data = JSON.parse(raw);
-        } catch (e) {
-          data = raw;
-        }
-
-        chatHistory.lastChild.remove(); // Remove "thinking..." message
-        const answer = typeof data === 'string' ? data :
-                       data.answer || data.message || data.response || JSON.stringify(data);
-        addMessage(answer, "bot");
-      } catch (err) {
-        chatHistory.lastChild.remove();
-        addMessage("⚠️ Error: " + err.message, "bot");
-      }
+    function toggleDarkMode() {
+      const theme = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'light' : 'dark');
     }
 
     function resetChat() {
-      chatHistory.innerHTML = "";
+      chatLog.innerHTML = `
+        <div class="message bot">
+          <div class="avatar">C</div>
+          <div class="bubble">Hello! I'm Clara, your operations assistant. How can I help you today?</div>
+        </div>`;
     }
 
     function downloadChat() {
-      const text = Array.from(chatHistory.querySelectorAll(".message"))
-        .map(m => {
-          const who = m.classList.contains("user") ? "You" : "Clara";
-          const msg = m.querySelector(".message-bubble").textContent;
-          return `${who}: ${msg}`;
-        }).join("\n");
-      const blob = new Blob([text], { type: "text/plain" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "clara_chat.txt";
-      link.click();
+      let text = '';
+      document.querySelectorAll('.message').forEach(msg => {
+        const who = msg.classList.contains('user') ? 'You' : 'Clara';
+        const content = msg.querySelector('.bubble').innerText;
+        text += `${who}: ${content}\n\n`;
+      });
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'clara_chat.txt';
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
-    themeToggle.addEventListener("change", function () {
-      document.body.className = this.checked ? "dark" : "light";
-    });
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
 
-    queryInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") askClara();
-    });
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.innerHTML = `<div class="avatar">Y</div><div class="bubble">${message}</div>`;
+      chatLog.appendChild(userMsg);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      userInput.value = '';
 
-    // Initial welcome message
-    addMessage("Hello! I'm Clara, your operations assistant. How can I help you today?", "bot");
+      // Show thinking bubble
+      const thinking = document.createElement('div');
+      thinking.className = 'message bot';
+      thinking.innerHTML = `<div class="avatar">C</div><div class="bubble">Clara is thinking...</div>`;
+      chatLog.appendChild(thinking);
+      chatLog.scrollTop = chatLog.scrollHeight;
+
+      try {
+        const res = await fetch('YOUR_API_GATEWAY_ENDPOINT', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: message })
+        });
+
+        const data = await res.json();
+        let answer = '';
+
+        if (Array.isArray(data)) {
+          answer = data.map(item => item.text || item.content || JSON.stringify(item)).join('\n');
+        } else if (data?.text) {
+          answer = data.text;
+        } else {
+          answer = JSON.stringify(data);
+        }
+
+        thinking.remove();
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message bot';
+        botMsg.innerHTML = `<div class="avatar">C</div><div class="bubble">${answer}</div>`;
+        chatLog.appendChild(botMsg);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      } catch (error) {
+        thinking.remove();
+        const errMsg = document.createElement('div');
+        errMsg.className = 'message bot';
+        errMsg.innerHTML = `<div class="avatar">C</div><div class="bubble">Sorry, an error occurred.</div>`;
+        chatLog.appendChild(errMsg);
+      }
+    }
   </script>
 </body>
 </html>
