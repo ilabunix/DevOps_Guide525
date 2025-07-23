@@ -8,247 +8,269 @@
     :root {
       --primary: #6d28d9;
       --primary-light: #a58cf6;
-      --primary-dark: #4c1d95;
+      --primary-dark: #5b21b6;
+      --bg-light: #f8f9fa;
+      --bg-dark: #1f1f1f;
+      --text-light: #212529;
+      --text-dark: #f1f1f1;
       --bot-bubble: #e0e7ff;
       --user-bubble: #dbeafe;
-      --bg: #f8f9fa;
-      --text: #1f2937;
-      --card: #fff;
-      --border: #e5e7eb;
-    }
-
-    [data-theme="dark"] {
-      --bg: #111827;
-      --text: #e5e7eb;
-      --card: #1f2937;
-      --border: #374151;
-      --bot-bubble: #3b82f6;
-      --user-bubble: #8b5cf6;
+      --border-light: #ccc;
     }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
     }
 
     .chat-container {
       max-width: 800px;
       margin: 2rem auto;
-      background: var(--card);
-      border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      background: white;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 90vh;
+    }
+
+    body.dark .chat-container {
+      background: #2a2a2a;
     }
 
     .chat-header {
-      background: linear-gradient(90deg, #6d28d9, #9333ea);
+      padding: 1rem;
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
       color: white;
-      padding: 1rem 1.5rem;
-      font-size: 1.2rem;
-      font-weight: bold;
+    }
+
+    .chat-header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .chat-header p {
+      margin: 0.25rem 0 0;
+      font-size: 0.875rem;
+      opacity: 0.9;
     }
 
     .chat-history {
-      flex-grow: 1;
-      overflow-y: auto;
       padding: 1rem;
+      max-height: 500px;
+      overflow-y: auto;
     }
 
     .message {
       display: flex;
       margin-bottom: 1rem;
-      animation: fadeIn 0.3s ease-in;
     }
 
     .message.bot {
-      justify-content: flex-start;
+      flex-direction: row;
     }
 
     .message.user {
-      justify-content: flex-end;
+      flex-direction: row-reverse;
     }
 
-    .bubble {
-      max-width: 70%;
+    .avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin: 0 0.5rem;
+    }
+
+    .message-bubble {
+      background: #f1f1f1;
       padding: 0.75rem 1rem;
-      border-radius: 16px;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: all 0.3s ease-in-out;
+      border-radius: 1rem;
+      max-width: 70%;
+      line-height: 1.5;
       white-space: pre-wrap;
     }
 
-    .bubble.bot {
-      background: var(--bot-bubble);
-      color: #000;
-      border-bottom-left-radius: 4px;
-    }
-
-    .bubble.user {
-      background: var(--user-bubble);
+    body.dark .message-bubble {
+      background: #3a3a3a;
       color: white;
-      border-bottom-right-radius: 4px;
     }
 
-    .input-container {
+    .input-area {
       display: flex;
-      padding: 1rem;
-      border-top: 1px solid var(--border);
+      align-items: center;
       gap: 0.5rem;
-      background: var(--card);
+      padding: 1rem;
+      border-top: 1px solid var(--border-light);
     }
 
-    #query {
+    .input-area input {
       flex-grow: 1;
-      padding: 0.75rem;
-      border: 1px solid var(--border);
+      padding: 0.5rem;
       border-radius: 8px;
+      border: 1px solid #ccc;
     }
 
-    button {
+    .input-area button {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 0.75rem 1.2rem;
       border-radius: 8px;
+      padding: 0.5rem 1rem;
       cursor: pointer;
     }
 
-    .toolbar {
+    .controls {
       display: flex;
       justify-content: space-between;
+      padding: 0 1rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .controls label {
+      display: flex;
       align-items: center;
-      padding: 0.5rem 1rem;
-      border-top: 1px solid var(--border);
-      background: var(--card);
+      gap: 0.5rem;
     }
 
-    .toolbar button {
-      font-size: 0.85rem;
-      padding: 0.5rem 0.8rem;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
+    .controls button {
+      padding: 0.4rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: #444;
+      color: white;
+      cursor: pointer;
     }
 
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(8px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-
-    .dark-mode-toggle {
-      margin-left: auto;
-      font-size: 0.85rem;
+    .controls button:hover {
+      background: #333;
     }
   </style>
 </head>
-
-<body data-theme="light">
+<body class="light">
   <div class="chat-container">
     <div class="chat-header">
-      Ask Clara – A GenAI Assistant for Smarter Operations
+      <h1>Ask Clara – A GenAI Assistant for Smarter Operations</h1>
+      <p>Clara knows your playbooks, so you don’t have to.</p>
     </div>
 
-    <div class="chat-history" id="chatHistory"></div>
+    <div class="chat-history" id="chatHistory">
+      <!-- Messages will go here -->
+    </div>
 
-    <div class="input-container">
+    <div class="input-area">
       <input type="text" id="query" placeholder="Ask Clara..." />
-      <button onclick="askBot()">Send</button>
+      <button onclick="askClara()">Send</button>
     </div>
 
-    <div class="toolbar">
-      <button onclick="resetChat()">Reset Chat</button>
-      <button onclick="downloadTranscript()">Download Chat</button>
-      <label class="dark-mode-toggle">
-        <input type="checkbox" id="themeToggle"> Dark Mode
+    <div class="controls">
+      <div>
+        <button onclick="resetChat()">Reset Chat</button>
+        <button onclick="downloadChat()">Download Chat</button>
+      </div>
+      <label>
+        <input type="checkbox" id="themeToggle" /> Dark Mode
       </label>
     </div>
   </div>
 
   <script>
-    const queryInput = document.getElementById("query");
     const chatHistory = document.getElementById("chatHistory");
+    const queryInput = document.getElementById("query");
     const themeToggle = document.getElementById("themeToggle");
 
-    async function askBot() {
+    function addMessage(text, sender) {
+      const message = document.createElement("div");
+      message.className = `message ${sender}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = sender === "bot" ? "C" : "U";
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      bubble.textContent = typeof text === 'object' ? JSON.stringify(text) : text;
+
+      message.appendChild(avatar);
+      message.appendChild(bubble);
+      chatHistory.appendChild(message);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function askClara() {
       const query = queryInput.value.trim();
       if (!query) return;
       addMessage(query, "user");
       queryInput.value = "";
-
-      const thinkingMsg = addMessage("Clara is thinking...", "bot");
+      addMessage("Clara is thinking...", "bot");
 
       try {
         const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ query })
         });
 
-        const responseText = await res.text();
+        const raw = await res.text();
         let data;
-
         try {
-          data = JSON.parse(responseText);
-        } catch {
-          data = { answer: responseText };
+          data = JSON.parse(raw);
+        } catch (e) {
+          data = raw;
         }
 
-        thinkingMsg.remove();
-
-        const answer = (data.answer || data.message || data.response || JSON.stringify(data)).toString();
+        chatHistory.lastChild.remove(); // Remove "thinking..." message
+        const answer = typeof data === 'string' ? data :
+                       data.answer || data.message || data.response || JSON.stringify(data);
         addMessage(answer, "bot");
       } catch (err) {
-        thinkingMsg.remove();
+        chatHistory.lastChild.remove();
         addMessage("⚠️ Error: " + err.message, "bot");
       }
     }
 
-    function addMessage(text, sender) {
-      const wrapper = document.createElement("div");
-      wrapper.className = `message ${sender}`;
-
-      const bubble = document.createElement("div");
-      bubble.className = `bubble ${sender}`;
-      bubble.textContent = text;
-
-      wrapper.appendChild(bubble);
-      chatHistory.appendChild(wrapper);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-      return wrapper;
-    }
-
     function resetChat() {
-      chatHistory.innerHTML = '';
+      chatHistory.innerHTML = "";
     }
 
-    function downloadTranscript() {
-      const lines = Array.from(chatHistory.children).map(div =>
-        `${div.classList.contains("user") ? "You" : "Clara"}: ${div.textContent.trim()}`
-      ).join("\n");
-      const blob = new Blob([lines], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "clara-chat.txt";
-      a.click();
+    function downloadChat() {
+      const text = Array.from(chatHistory.querySelectorAll(".message"))
+        .map(m => {
+          const who = m.classList.contains("user") ? "You" : "Clara";
+          const msg = m.querySelector(".message-bubble").textContent;
+          return `${who}: ${msg}`;
+        }).join("\n");
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "clara_chat.txt";
+      link.click();
     }
 
-    themeToggle.addEventListener("change", () => {
-      document.body.setAttribute("data-theme", themeToggle.checked ? "dark" : "light");
+    themeToggle.addEventListener("change", function () {
+      document.body.className = this.checked ? "dark" : "light";
     });
 
     queryInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") askBot();
+      if (e.key === "Enter") askClara();
     });
+
+    // Initial welcome message
+    addMessage("Hello! I'm Clara, your operations assistant. How can I help you today?", "bot");
   </script>
 </body>
 </html>
