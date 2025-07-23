@@ -1,140 +1,254 @@
-🔹 Slide 1: AI-Powered Operations Knowledge – Eliminating the Bottleneck
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ask Clara – A GenAI Assistant</title>
+  <style>
+    :root {
+      --primary: #6d28d9;
+      --primary-light: #a58cf6;
+      --primary-dark: #4c1d95;
+      --bot-bubble: #e0e7ff;
+      --user-bubble: #dbeafe;
+      --bg: #f8f9fa;
+      --text: #1f2937;
+      --card: #fff;
+      --border: #e5e7eb;
+    }
 
-Script:
-“Hi everyone — thanks for joining. Today I want to walk you through the work we’ve done on an AI-powered chatbot for operations knowledge, and how it’s helping eliminate delays during incidents by making critical information instantly accessible.
+    [data-theme="dark"] {
+      --bg: #111827;
+      --text: #e5e7eb;
+      --card: #1f2937;
+      --border: #374151;
+      --bot-bubble: #3b82f6;
+      --user-bubble: #8b5cf6;
+    }
 
-This is part of our broader initiative to apply GenAI meaningfully in technical operations — and this chatbot POC marks a key milestone toward that.”
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
 
-⸻
+    .chat-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 90vh;
+    }
 
-🔹 Slide 2: The Problem We’re Solving
+    .chat-header {
+      background: linear-gradient(90deg, #6d28d9, #9333ea);
+      color: white;
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
 
-Script:
-“We’ve all experienced the issue:
-	•	Documentation is everywhere — Confluence, OneDrive, SharePoint — but not in one place.
-	•	During incidents, we spend more time searching than solving.
-	•	And SMEs aren’t always available when we need them.
+    .chat-history {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
 
-Even when knowledge exists, it’s often buried or not in a consumable format. That’s the bottleneck we wanted to eliminate.”
+    .message {
+      display: flex;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease-in;
+    }
 
-⸻
+    .message.bot {
+      justify-content: flex-start;
+    }
 
-🔹 Slide 3: How the Chatbot Helps Ops Teams
+    .message.user {
+      justify-content: flex-end;
+    }
 
-Script:
-“Our GenAI-powered chatbot is built to directly address this challenge:
-	•	You ask a question in natural language.
-	•	It understands what you mean and returns specific answers from our runbooks and playbooks.
-	•	It’s available 24x7, acting like a virtual SME.
-	•	It works both via a Web UI and integrates with Microsoft Teams — so it meets people where they work.
+    .bubble {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease-in-out;
+      white-space: pre-wrap;
+    }
 
-This isn’t a generic LLM — it’s trained on our real documentation and optimized for our operational context.”
+    .bubble.bot {
+      background: var(--bot-bubble);
+      color: #000;
+      border-bottom-left-radius: 4px;
+    }
 
-⸻
+    .bubble.user {
+      background: var(--user-bubble);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
 
-🔹 Slide 4: GenAI Strategy for FRFS Technical Operations
+    .input-container {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      gap: 0.5rem;
+      background: var(--card);
+    }
 
-Script:
-“This chatbot is our first successful POC — but it’s just the beginning.
+    #query {
+      flex-grow: 1;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
 
-We’re aligning with the broader GenAI strategy for technical operations, which includes:
-	•	Assessment & Discovery: Finding more repetitive, high-friction tasks AI can support.
-	•	Pilot Implementation: Expanding from the chatbot into other use cases like automated alert triage or remediation workflows.
-	•	Scalable Integration: Building guardrails and frameworks to scale GenAI solutions responsibly across the enterprise.
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-Key use cases include:
-	•	Intelligent monitoring
-	•	Ops automation
-	•	Capacity planning
-	•	And most importantly — context-aware documentation access, where this chatbot is already delivering value.”
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--card);
+    }
 
+    .toolbar button {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.8rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
 
-✅ Technical Demo Script – GenAI Chatbot for Operations
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(8px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
 
-⸻
+    .dark-mode-toggle {
+      margin-left: auto;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
 
-🔹 1. Introduction (Set the Context)
+<body data-theme="light">
+  <div class="chat-container">
+    <div class="chat-header">
+      Ask Clara – A GenAI Assistant for Smarter Operations
+    </div>
 
-Say:
-“Now I’ll give you a quick walkthrough of our GenAI chatbot in action.
+    <div class="chat-history" id="chatHistory"></div>
 
-This POC version is designed to assist production support and operations teams by retrieving context-specific guidance from internal runbooks and documentation — instantly, just by asking questions.”
+    <div class="input-container">
+      <input type="text" id="query" placeholder="Ask Clara..." />
+      <button onclick="askBot()">Send</button>
+    </div>
 
-⸻
+    <div class="toolbar">
+      <button onclick="resetChat()">Reset Chat</button>
+      <button onclick="downloadTranscript()">Download Chat</button>
+      <label class="dark-mode-toggle">
+        <input type="checkbox" id="themeToggle"> Dark Mode
+      </label>
+    </div>
+  </div>
 
-🔹 2. Architecture Overview (optional quick visual or verbal walkthrough)
+  <script>
+    const queryInput = document.getElementById("query");
+    const chatHistory = document.getElementById("chatHistory");
+    const themeToggle = document.getElementById("themeToggle");
 
-Say:
-“Here’s how it works under the hood:
-	•	A user sends a natural language query through the chatbot UI
-	•	The query is semantically embedded using AWS Bedrock (Titan Embeddings)
-	•	That vector is matched against our indexed content in OpenSearch
-	•	The top relevant document snippets are retrieved
-	•	We then prompt an LLM like Claude via Bedrock to generate a contextual response
-	•	The final output is returned as a conversational answer
+    async function askBot() {
+      const query = queryInput.value.trim();
+      if (!query) return;
+      addMessage(query, "user");
+      queryInput.value = "";
 
-The backend is fully serverless — built using API Gateway, Lambda, Bedrock, and OpenSearch Serverless.”
+      const thinkingMsg = addMessage("Clara is thinking...", "bot");
 
-⸻
+      try {
+        const res = await fetch("https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
 
-🔹 3. Live Interaction – Example Prompt
+        const responseText = await res.text();
+        let data;
 
-Say:
-“Let’s try a real-world example an ops team might ask.”
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          data = { answer: responseText };
+        }
 
-💬 Prompt in chatbot:
-“What steps should I follow to restart the Kafka connector for the payments service?”
+        thinkingMsg.remove();
 
-Wait for response, then explain:
+        const answer = (data.answer || data.message || data.response || JSON.stringify(data)).toString();
+        addMessage(answer, "bot");
+      } catch (err) {
+        thinkingMsg.remove();
+        addMessage("⚠️ Error: " + err.message, "bot");
+      }
+    }
 
-Say:
-“As you can see, the chatbot:
-	•	Understood the context of Kafka connector
-	•	Pulled the exact steps from our documented restart procedure
-	•	And returned it in a clear, actionable format — no digging through Confluence needed.”
+    function addMessage(text, sender) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `message ${sender}`;
 
-⸻
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${sender}`;
+      bubble.textContent = text;
 
-🔹 4. Follow-Up Query to Show Context Awareness
+      wrapper.appendChild(bubble);
+      chatHistory.appendChild(wrapper);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      return wrapper;
+    }
 
-Say:
-“Let’s now ask a follow-up to simulate a real incident scenario.”
+    function resetChat() {
+      chatHistory.innerHTML = '';
+    }
 
-💬 Follow-up Prompt:
-“What logs should I check if the restart fails?”
+    function downloadTranscript() {
+      const lines = Array.from(chatHistory.children).map(div =>
+        `${div.classList.contains("user") ? "You" : "Clara"}: ${div.textContent.trim()}`
+      ).join("\n");
+      const blob = new Blob([lines], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "clara-chat.txt";
+      a.click();
+    }
 
-Say:
-“Notice how it retains the topic of the previous interaction — and suggests log locations and known failure patterns relevant to the payments connector.”
+    themeToggle.addEventListener("change", () => {
+      document.body.setAttribute("data-theme", themeToggle.checked ? "dark" : "light");
+    });
 
-⸻
-
-🔹 5. Troubleshooting/Runbook Example
-
-Say:
-“Let’s now try another operations use case — retrieving a troubleshooting guide.”
-
-💬 Prompt:
-“App XYZ is throwing 502 errors. How do I fix it?”
-
-Say:
-“The chatbot recognizes this as a known issue, fetches the relevant troubleshooting steps from the SOP, and even recommends what to verify first — like load balancer health checks or backend service status.”
-
-⸻
-
-🔹 6. Demo Wrap-Up: Transition to Next Phase
-
-Say:
-“This completes the core part of the demo.
-
-As you’ve seen:
-	•	The chatbot eliminates friction in accessing operational knowledge
-	•	It provides context-aware, LLM-powered answers in seconds
-	•	It’s already usable via web and soon Teams
-	•	And this is just the beginning — we’re preparing for broader rollout with more content, deeper integrations, and new use cases like intelligent alert triage and auto-remediation.”
-
-⸻
-
-🔹 Optional – Invite Engagement
-
-Say:
-“If your team has runbooks or common issues that would benefit from this, we’d love to collaborate and include your use cases in the production rollout.”
+    queryInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") askBot();
+    });
+  </script>
+</body>
+</html>
