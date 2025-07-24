@@ -1,188 +1,101 @@
-📘 Confluence Page: NimbusApp Server Troubleshooting Guide – Frontend, Backend, DB Nodes
+📁 RCA #1: PulseStack Login Failure – July 8, 2025
 
-(Slug: playbooks/nimbusapp-server-troubleshooting)
+Title: RCA - PulseStack Login Failure - 2025-07-08
 
-⸻
+Summary:
+End users were unable to authenticate into the PulseStack platform between 08:25–09:10 CST. Login attempts returned HTTP 500 or timeout errors.
 
-🧠 Summary
+Impact:
+	•	100% login failure across all regions
+	•	/auth/login API returned HTTP 500s
+	•	Tripled support ticket volume in under 30 minutes
 
-This playbook provides actionable steps to resolve common server issues across the NimbusApp architecture — including frontend (UI/API), backend (processing/services), and database (RDS/PostgreSQL) nodes.
-
-This content is indexed for the NimbusOps Chatbot, which can answer contextually with specific command-line instructions and AWS console navigation.
-
-🏷️ Server Roles
-
-Server
-Role
-Hostname/Tag
-frontend01
-NimbusApp Web UI Server
-Name=frontend01
-frontend02
-NimbusApp API Gateway
-Name=frontend02
-backend01
-NimbusApp Core App Logic
-Name=backend01
-backend02
-NimbusApp Queue Processor
-Name=backend02
-db01
-NimbusApp PostgreSQL RDS
-Name=db01
-
-🚨 Common Issues & Solutions by Server Type
-
-⸻
-
-🖥️ Frontend Servers – frontend01, frontend02
-
-⸻
-
-🔧 Issue: NimbusApp UI Not Loading (502/504)
-
-Symptoms:
-	•	Browser shows 502 Bad Gateway or 504 Timeout.
-	•	CloudFront/ALB shows targets as unhealthy.
+Root Cause:
+A misconfigured ALB target group caused all auth-backend instances to be marked unhealthy. The root issue was a failed NGINX startup due to a missing TLS cert reference from a recent patch.
 
 Resolution:
-	1.	Navigate to EC2 > Instances > frontend01 in AWS Console.
-	2.	SSH into the instance:
-ssh ec2-user@<frontend01-ip>
-	3.	Check Nginx:
-sudo systemctl status nginx
+	•	Reverted patch on auth-backend01/02
+	•	Revalidated NGINX startup config
+	•	Reinstated healthy targets in the ALB
 
-4.	Restart if down:
-sudo systemctl restart nginx
-	5.	Validate ALB health checks and run:
-curl -I https://frontend.nimbusapp.com
-
-🔧 Issue: Blank Screen on React App
-
-Symptoms:
-	•	React build deployed, but nothing shows on browser.
-
-Resolution:
-	1.	SSH into frontend01:
-ssh ec2-user@<frontend01-ip>
-2.	Check if build folder exists:
-ls -l /var/www/html
-3.	If empty, redeploy:
-cd /opt/deploy_scripts
-./deploy_frontend.sh
-
-🔄 Backend Servers – backend01, backend02
+Follow-Up Actions:
+	•	✅ Add NGINX config lint check in CI/CD
+	•	✅ Enable health check alarms in CloudWatch
 
 ⸻
 
-🔧 Issue: NimbusApp API Endpoints Timing Out
+📁 RCA #2: PulseStack Dashboard Latency – July 12, 2025
 
-Symptoms:
-	•	Frontend errors calling backend APIs.
-	•	No recent log activity.
+Title: RCA - PulseStack Dashboard Latency - 2025-07-12
 
-Resolution:
-	1.	SSH into backend01:
-ssh ec2-user@<backend01-ip>
-2.	Check app process:
-ps aux | grep app.py
-3.	If not running:
-sudo systemctl restart backend-app.service
-4.	Confirm recovery:
-curl http://localhost:8080/health
+Summary:
+Users experienced high latency while loading dashboards in PulseStack between 10:00–11:30 CST.
 
-🔧 Issue: NimbusApp Queue Not Processing
+Impact:
+	•	Dashboard load time spiked from 1.2s to 5.6s
+	•	Intermittent failures on /dashboard/summary
+	•	Power users with large datasets experienced data fetch timeouts
 
-Symptoms:
-	•	SQS/Redis queues backing up.
-	•	backend02 not consuming tasks.
+Root Cause:
+A background job began executing full-table joins on the production read-replica database. This job was introduced by the internal metrics team and led to high I/O latency on the replica.
 
 Resolution:
-	1.	SSH into backend02:
-ssh ec2-user@<backend02-ip>
-	2.	Check logs:
-tail -n 100 /var/log/worker.log
-3.	Restart the queue processor:
-sudo systemctl restart worker-queue.service
-4.	Monitor:
-watch "ps aux | grep worker"
+	•	Disabled the reporting job immediately
+	•	Increased read IOPS capacity on the replica
+	•	Moved reporting to Athena queries going forward
 
-
-🗄️ Database Node – db01 (PostgreSQL RDS)
+Follow-Up Actions:
+	•	✅ Isolate analytics workloads from transactional DB
+	•	✅ Add throttling guardrails to internal jobs
 
 ⸻
 
-🔧 Issue: NimbusApp Backend Fails to Connect to DB
+📁 RCA #3: PulseStack API 503 Errors – July 15, 2025
 
-Symptoms:
-	•	Logs show connection refused or timeout.
+Title: RCA - PulseStack Public API 503 Errors - 2025-07-15
+
+Summary:
+External and internal API users received intermittent 503 Service Unavailable errors from /v2/accounts/* between 13:10–14:05 CST.
+
+Impact:
+	•	503 errors from ECS public API containers
+	•	Internal job failures and customer partner escalations
+	•	Temporary degraded status posted on public status page
+
+Root Cause:
+An ECS deployment introduced a bad sidecar proxy config (Envoy) which broke DNS resolution for newly launched tasks. The tasks passed health checks but couldn’t reach dependent services.
 
 Resolution:
-	1.	Open RDS > db01 in AWS Console.
-	2.	Check status: should be Available.
-	3.	Review security groups: must allow port 5432 from backend SG.
-	4.	From backend01, test:
-psql -h <db-host> -U nimbus_user -d nimbus_db
+	•	Rolled back to the last working ECS task definition
+	•	Removed and replaced failed tasks
+	•	Validated Envoy config schema against staging
 
-🔧 Issue: High CPU / Long Query Times
+Follow-Up Actions:
+	•	✅ Add post-deploy smoke test for DNS connectivity
+	•	✅ Separate critical APIs from sidecar-dependent tasks
+
+⸻
+
+📁 RCA #4: PulseStack Static Asset Outage – July 19, 2025
+
+Title: RCA - PulseStack Static Asset Outage - 2025-07-19
+
+Summary:
+Users globally reported UI issues due to missing static files (CSS, images, JS) from 12:45–13:10 CST.
+
+Impact:
+	•	Login screen background missing
+	•	Buttons and UI styling broken
+	•	Over 90% of traffic returned CloudFront 403s or 404s for static assets
+
+Root Cause:
+An overbroad CloudFront cache invalidation (/*) during a deployment emptied the cache. The origin S3 bucket had a misconfigured IAM policy that blocked re-fetching of new assets.
 
 Resolution:
-	1.	Open Performance Insights > db01.
-	2.	Identify top queries.
-	3.	From psql:
-SELECT pid, state, query FROM pg_stat_activity WHERE state != 'idle';
+	•	Restored previous S3 bucket policy
+	•	Manually refreshed key assets into CloudFront
+	•	Scoped cache invalidation to /static/* only
 
-	4.	Kill problem query:
-SELECT pg_terminate_backend(<pid>);
-
-
-⸻
-
-✅ Cheat Sheet – Validation Commands
-Purpose
-Command
-App health
-curl http://localhost:8080/health
-Restart app
-sudo systemctl restart backend-app.service
-Logs (frontend)
-tail -n 100 /var/log/nginx/access.log
-Logs (backend)
-tail -n 100 /var/log/backend-app/app.log
-DB connect test
-psql -h <hostname> -U nimbus_user -d nimbus_db
-
-
-⸻
-
-🧪 Admin Automation Scripts
-Action
-Script
-Server recovery
-/admin/scripts/recover_server.sh <servername>
-Restart Nginx
-/admin/scripts/nginx_restart.sh frontend01
-Health check app
-/opt/app/scripts/check_health.sh
-
-📞 Escalation Protocol
-
-If issue persists after 15 minutes:
-	•	Post in #oncall-nimbus with:
-	•	🔹 Server name
-	•	🔹 Issue symptoms
-	•	🔹 Logs or error messages
-	•	🔹 Steps already taken
-
-⸻
-
-🔍 Example Queries the Chatbot Can Now Answer Precisely
-
-“NimbusApp backend02 is not processing messages”
-→ “Try restarting worker-queue.service on backend02 using sudo systemctl restart worker-queue.service. Check /var/log/worker.log for any job errors.”
-
-“Why is the NimbusApp UI not loading?”
-→ “Check if Nginx is running on frontend01. If it’s down, restart it using sudo systemctl restart nginx and validate using curl -I.”
-
-“Database is timing out for NimbusApp”
-→ “Ensure db01 is running and that port 5432 is allowed from backend SG. You can test from backend01 with: psql -h <db-host> -U nimbus_user -d nimbus_db.”
+Follow-Up Actions:
+	•	✅ Add cache simulation step to deployment pipeline
+	•	✅ Add alerting for spike in CloudFront 4xx errors
