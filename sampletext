@@ -1,101 +1,128 @@
-📁 RCA #1: PulseStack Login Failure – July 8, 2025
+//@version=5
+strategy("EMAX Crossover Strategy Pro v1.0", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
 
-Title: RCA - PulseStack Login Failure - 2025-07-08
+// === Inputs ===
+mode = input.string("SCALP", title="Mode", options=["SCALP", "SWING"])
+useFixed = input.bool(false, title="Use Fixed TP/SL?")
+fixedTP = input.float(12.0, title="Fixed TP (ticks/points)")
+fixedSL = input.float(8.0, title="Fixed SL (ticks/points)")
+tpMult = input.float(1.5, title="ATR Take Profit Multiplier")
+slMult = input.float(1.0, title="ATR Stop Loss Multiplier")
+scoreThreshold = input.int(70, title="Minimum Signal Score to Enter Trade")
+volMultiplier = input.float(1.5, title="Volume Spike Threshold (x avgVol)")
+useRSI = input.bool(true, title="Use RSI Filter for SWING")
+useVWAP = input.bool(true, title="Use VWAP Filter for SCALP")
 
-Summary:
-End users were unable to authenticate into the PulseStack platform between 08:25–09:10 CST. Login attempts returned HTTP 500 or timeout errors.
+// === Core Indicators ===
+fastLen = mode == "SCALP" ? 9 : 10
+slowLen = mode == "SCALP" ? 21 : 55
+fastEMA = ta.ema(close, fastLen)
+slowEMA = ta.ema(close, slowLen)
+vwap = ta.vwap
+atr = ta.atr(14)
+rsi = ta.rsi(close, 14)
+macdLine = ta.ema(close, 12) - ta.ema(close, 26)
+avgVol = ta.sma(volume, 20)
 
-Impact:
-	•	100% login failure across all regions
-	•	/auth/login API returned HTTP 500s
-	•	Tripled support ticket volume in under 30 minutes
+// === Signal Score ===
+trendOK = fastEMA > slowEMA
+structureOK = mode == "SCALP" ? close > vwap : close > slowEMA
+momentumOK = rsi > 50 and macdLine > 0
+volumeSpike = volume > avgVol * volMultiplier
 
-Root Cause:
-A misconfigured ALB target group caused all auth-backend instances to be marked unhealthy. The root issue was a failed NGINX startup due to a missing TLS cert reference from a recent patch.
+score = 0
+score += trendOK ? 30 : 0
+score += structureOK ? 20 : 0
+score += momentumOK ? 30 : 0
+score += volumeSpike ? 20 : 0
 
-Resolution:
-	•	Reverted patch on auth-backend01/02
-	•	Revalidated NGINX startup config
-	•	Reinstated healthy targets in the ALB
+// === Retest Entry Logic ===
+var float lastCrossPrice = na
+var bool canEnter = false
 
-Follow-Up Actions:
-	•	✅ Add NGINX config lint check in CI/CD
-	•	✅ Enable health check alarms in CloudWatch
+if ta.crossover(fastEMA, slowEMA)
+    lastCrossPrice := close
+    canEnter := false
+if not canEnter and close < fastEMA and not na(lastCrossPrice)
+    canEnter := true
 
-⸻
+longCondition = trendOK and canEnter and score >= scoreThreshold and (mode == "SCALP" ? (not useVWAP or close > vwap) : (not useRSI or rsi > 40))
+shortCondition = fastEMA < slowEMA and close > fastEMA and score >= scoreThreshold and (mode == "SCALP" ? (not useVWAP or close < vwap) : (not useRSI or rsi < 60))
 
-📁 RCA #2: PulseStack Dashboard Latency – July 12, 2025
+// === Entry Price Track
+var float entryPrice = na
+if (longCondition or shortCondition)
+    entryPrice := close
 
-Title: RCA - PulseStack Dashboard Latency - 2025-07-12
+// === TP/SL Logic
+longTP1 = entryPrice + (useFixed ? fixedTP : atr * 1.5)
+longTP2 = entryPrice + (useFixed ? fixedTP * 2.0 : atr * 2.5)
+longSL  = entryPrice - (useFixed ? fixedSL : atr * slMult)
 
-Summary:
-Users experienced high latency while loading dashboards in PulseStack between 10:00–11:30 CST.
+shortTP1 = entryPrice - (useFixed ? fixedTP : atr * 1.5)
+shortTP2 = entryPrice - (useFixed ? fixedTP * 2.0 : atr * 2.5)
+shortSL  = entryPrice + (useFixed ? fixedSL : atr * slMult)
 
-Impact:
-	•	Dashboard load time spiked from 1.2s to 5.6s
-	•	Intermittent failures on /dashboard/summary
-	•	Power users with large datasets experienced data fetch timeouts
+longTrailExit = close < fastEMA
+shortTrailExit = close > fastEMA
 
-Root Cause:
-A background job began executing full-table joins on the production read-replica database. This job was introduced by the internal metrics team and led to high I/O latency on the replica.
+// === Strategy Orders
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+if (shortCondition)
+    strategy.entry("Short", strategy.short)
 
-Resolution:
-	•	Disabled the reporting job immediately
-	•	Increased read IOPS capacity on the replica
-	•	Moved reporting to Athena queries going forward
+strategy.exit("TP1 Long", from_entry="Long", limit=longTP1, stop=longSL, qty_percent=50)
+strategy.exit("TP2 Long", from_entry="Long", limit=longTP2, stop=longSL, qty_percent=25)
+strategy.exit("Trail Long", from_entry="Long", when=longTrailExit, qty_percent=25)
 
-Follow-Up Actions:
-	•	✅ Isolate analytics workloads from transactional DB
-	•	✅ Add throttling guardrails to internal jobs
+strategy.exit("TP1 Short", from_entry="Short", limit=shortTP1, stop=shortSL, qty_percent=50)
+strategy.exit("TP2 Short", from_entry="Short", limit=shortTP2, stop=shortSL, qty_percent=25)
+strategy.exit("Trail Short", from_entry="Short", when=shortTrailExit, qty_percent=25)
 
-⸻
+// === Plot EMAs & VWAP
+plot(fastEMA, title="Fast EMA", color=color.orange)
+plot(slowEMA, title="Slow EMA", color=color.blue)
+plot(useVWAP ? vwap : na, title="VWAP", color=color.purple)
 
-📁 RCA #3: PulseStack API 503 Errors – July 15, 2025
+// === Bar Coloring
+barcolor(score >= scoreThreshold and fastEMA > slowEMA ? color.lime :
+         score >= scoreThreshold and fastEMA < slowEMA ? color.red :
+         color.gray)
 
-Title: RCA - PulseStack Public API 503 Errors - 2025-07-15
+// === Signal Dashboard Label
+var label infoLabel = na
+if (na(infoLabel))
+    infoLabel := label.new(bar_index, high, "", xloc=xloc.bar_index, style=label.style_label_left)
 
-Summary:
-External and internal API users received intermittent 503 Service Unavailable errors from /v2/accounts/* between 13:10–14:05 CST.
+entryStatus = longCondition ? "BUY" : shortCondition ? "SELL" : "WAIT"
+label.set_text(infoLabel, "📊 EMAX DASHBOARD\n" +
+    "Mode: " + mode + "\n" +
+    "Score: " + str.tostring(score, "#") + "\n" +
+    "Entry: " + entryStatus + "\n" +
+    (useFixed 
+        ? "Fixed TP1/2: " + str.tostring(fixedTP) + "/" + str.tostring(fixedTP*2.0) + "\nFixed SL: " + str.tostring(fixedSL)
+        : "TP1/2: " + str.tostring(atr*1.5, "#.##") + "/" + str.tostring(atr*2.5, "#.##") + "\nSL: " + str.tostring(atr*slMult, "#.##")))
+label.set_xy(infoLabel, bar_index + 1, high + atr)
+label.set_size(infoLabel, size.normal)
+label.set_style(infoLabel, label.style_label_left)
+label.set_color(infoLabel, color.black)
+label.set_textcolor(infoLabel, color.white)
 
-Impact:
-	•	503 errors from ECS public API containers
-	•	Internal job failures and customer partner escalations
-	•	Temporary degraded status posted on public status page
+// === Alerts (Webhook Simulation)
+alertcondition(longCondition, title="Long Alert", message="🟢 Long Entry Signal ({{ticker}}) at {{close}}")
+alertcondition(shortCondition, title="Short Alert", message="🔴 Short Entry Signal ({{ticker}}) at {{close}}")
 
-Root Cause:
-An ECS deployment introduced a bad sidecar proxy config (Envoy) which broke DNS resolution for newly launched tasks. The tasks passed health checks but couldn’t reach dependent services.
+// === Dynamic Structure Zones
+hh = ta.highest(high, 20)
+ll = ta.lowest(low, 20)
+plot(hh, title="Structure High", color=color.new(color.fuchsia, 50), style=plot.style_line)
+plot(ll, title="Structure Low", color=color.new(color.aqua, 50), style=plot.style_line)
 
-Resolution:
-	•	Rolled back to the last working ECS task definition
-	•	Removed and replaced failed tasks
-	•	Validated Envoy config schema against staging
-
-Follow-Up Actions:
-	•	✅ Add post-deploy smoke test for DNS connectivity
-	•	✅ Separate critical APIs from sidecar-dependent tasks
-
-⸻
-
-📁 RCA #4: PulseStack Static Asset Outage – July 19, 2025
-
-Title: RCA - PulseStack Static Asset Outage - 2025-07-19
-
-Summary:
-Users globally reported UI issues due to missing static files (CSS, images, JS) from 12:45–13:10 CST.
-
-Impact:
-	•	Login screen background missing
-	•	Buttons and UI styling broken
-	•	Over 90% of traffic returned CloudFront 403s or 404s for static assets
-
-Root Cause:
-An overbroad CloudFront cache invalidation (/*) during a deployment emptied the cache. The origin S3 bucket had a misconfigured IAM policy that blocked re-fetching of new assets.
-
-Resolution:
-	•	Restored previous S3 bucket policy
-	•	Manually refreshed key assets into CloudFront
-	•	Scoped cache invalidation to /static/* only
-
-Follow-Up Actions:
-	•	✅ Add cache simulation step to deployment pipeline
-	•	✅ Add alerting for spike in CloudFront 4xx errors
+// === On-Chart Performance Metrics
+wins = strategy.wintrades
+losses = strategy.losstrades
+trades = wins + losses
+avgRR = trades > 0 ? strategy.grossprofit / strategy.grossloss : na
+profitFactor = strategy.grossprofit / abs(strategy.grossloss)
+label.new(bar_index, low, text="📈 Trades: " + str.tostring(trades) + "\nWin Rate: " + str.tostring((wins/trades)*100, "#.##") + "%\nProfit Factor: " + str.tostring(profitFactor, "#.##"), yloc=yloc.belowbar, style=label.style_label_up, textcolor=color.white, size=size.small, color=color.new(color.black, 70))
