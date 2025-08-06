@@ -1,3 +1,3 @@
-NIT has completed a rolling recycle of the FedLine Provisioning Engine JVMs as part of the ongoing investigation. However, query response times remain elevated, and the underlying issue persists. Technical teams are continuing analysis to identify potential inefficiencies or cursor leaks contributing to the ORA-01000 errors.
+As part of ongoing remediation efforts, the team is currently performing a restart of the UIM JVMs to determine if it clears the persistent open cursor buildup and improves query response times.
 
-Further updates will be provided as the investigation progresses.
+This step follows previous attempts, including the FedLine Provisioning Engine JVM recycle and ongoing investigation into certificate-related exceptions.
