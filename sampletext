@@ -1,3 +1,8 @@
-As part of ongoing remediation efforts, the team is currently performing a restart of the UIM JVMs to determine if it clears the persistent open cursor buildup and improves query response times.
+Teams have identified that the data set currently being processed does not match what the system was originally designed to handle, based on legacy logic. This appears to be contributing to the cursor spike and job failure.
 
-This step follows previous attempts, including the FedLine Provisioning Engine JVM recycle and ongoing investigation into certificate-related exceptions.
+To bypass this mismatch and force the system past the problematic dataset:
+	•	The team is restarting the UIM JVMs again with updated config files.
+	•	This restart is expected to bypass the Aug 5th data that’s causing issues.
+	•	After the system resumes, the plan is to manually backfill the skipped data in coordination with Lyle’s team.
+
+The restart approach is intended to accelerate recovery rather than waiting for another scheduled job run. Config files are being synced across both servers to support the restart.
