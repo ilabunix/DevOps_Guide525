@@ -1,8 +1,3 @@
-Thanks for outlining the proposed change to shift the RA Report weekly job from Monday to Thursday.
+The data for August 4th through August 6th has been successfully updated and processed.
 
-Just to confirm:
-	•	Is this change strictly a day-of-week change (Monday ➝ Thursday), with the execution time remaining the same?
-	•	Will this be a permanent change going forward?
-	•	Will any UIM config updates or JVM restarts be required as part of the Sunday Prod release?
-
-Also, NIT needs to be made aware of this change so they can plan accordingly on their end — especially if any config or JVM-level actions are involved.
+We are also planning to update the RA Report weekly job to run on Thursdays going forward, with the change expected to be implemented tonight. This is to avoid reprocessing previously known bad data and to align with recent recovery efforts.
