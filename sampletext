@@ -1,12 +1,8 @@
-The team has successfully completed processing of the August 5th data. The required file was received from Lyle, and with assistance from EOC, it was uploaded and processed on the target server without issue.
+Thanks for outlining the proposed change to shift the RA Report weekly job from Monday to Thursday.
 
-✅ Summary of Final Actions:
-	•	August 5th data was manually provided and transferred to the server.
-	•	EOC supported the file upload process.
-	•	Data ingestion and processing completed successfully.
-	•	No further errors observed; cursor usage remains stable.
+Just to confirm:
+	•	Is this change strictly a day-of-week change (Monday ➝ Thursday), with the execution time remaining the same?
+	•	Will this be a permanent change going forward?
+	•	Will any UIM config updates or JVM restarts be required as part of the Sunday Prod release?
 
-📌 Status:
-	•	All impacted data has been addressed.
-	•	Systems are operating normally.
-	•	No customer impact reported throughout the duration of the incident.
+Also, NIT needs to be made aware of this change so they can plan accordingly on their end — especially if any config or JVM-level actions are involved.
