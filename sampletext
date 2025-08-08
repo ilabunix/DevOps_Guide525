@@ -1,3 +1,4 @@
-The data for August 4th through August 6th has been successfully updated and processed.
+The configuration for the weekly RA Report cycle has been updated to run on Thursdays.
+Following the change, the UIM JVMs were restarted, and validation checks have passed.
 
-We are also planning to update the RA Report weekly job to run on Thursdays going forward, with the change expected to be implemented tonight. This is to avoid reprocessing previously known bad data and to align with recent recovery efforts.
+No further issues observed — systems are operating normally. Incident can be closed pending final monitoring.
