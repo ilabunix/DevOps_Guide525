@@ -1,5 +1,5 @@
-Update:
-The fix has been deployed to production. The database script to remove the impacted link reference was executed, and JVMs have been restarted. The team is currently performing validation tests to confirm the resolution.
+Final Update:
+The fix has been deployed to production. The database script to remove the impacted link reference was executed, and JVMs were restarted. Validation testing in production has confirmed the resolution, with no further errors observed. Normal operations have resumed.
 
 Business Impact:
-Impact remains low — only two requests have been affected so far.
+Impact remained low — only two requests were affected during the incident window.
