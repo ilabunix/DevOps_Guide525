@@ -1,0 +1,5 @@
+Update:
+The team has completed validation in the lower environment, confirming that removing the linked reference in the database resolves the issue. We will proceed with an off-cycle production deployment tonight. The change involves executing the database update script to remove the link and performing JVM restarts to apply the fix. This is expected to fully resolve the issue.
+
+Business Impact:
+Impact remains low — currently only two requests have been affected by this issue.
