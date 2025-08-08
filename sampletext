@@ -1,2 +1,5 @@
 Update:
-The team is currently validating a fix in the lower environment. Lawrence is applying a database script to remove the impacted link and recycling the server to confirm the resolution. If successful, the same script will be executed in production to address the issue. This approach will avoid introducing the additional code tied to future functionality while resolving the current error. Deployment will proceed once validation in lower environment is successful.
+The team has completed validation in the lower environment. Lawrence applied a database script to remove the impacted link and recycled the server, confirming the resolution. This approach avoids introducing additional code tied to future functionality while resolving the current error. We will proceed with an off-cycle production deployment tonight, which will involve executing the same database script in production and performing JVM restarts to apply the fix. This is expected to fully resolve the issue.
+
+Business Impact:
+Impact remains low — currently only two requests have been affected by this issue.
