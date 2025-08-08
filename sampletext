@@ -1,6 +1,0 @@
-Update:
-Issue traced to an application change deployed on 07/27 that references the FDRT notification template, while the corresponding DB change is not scheduled until 09/14.
-
-Rollback is not possible — plan is to review the 07/27 deployment scope, and if this is the only DB dependency, perform a quick UAT in QA. If UAT passes, we will proceed with an emergency off-cycle Prod deployment tonight to implement the DB change and restore provisioning for FedLine Developer roles.
-
-Current impact remains low — 2 production requests in ePOD are affected.
