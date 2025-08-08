@@ -1,17 +1,6 @@
-Incident Number: INC1523920
+Update:
+Issue traced to an application change deployed on 07/27 that references the FDRT notification template, while the corresponding DB change is not scheduled until 09/14.
 
-Issue Recap:
-UIM is failing to provision FedLine Developer services for subscribers due to missing notification template FDRT.
-Error: Notification template not found: FDRT
+Rollback is not possible — plan is to review the 07/27 deployment scope, and if this is the only DB dependency, perform a quick UAT in QA. If UAT passes, we will proceed with an emergency off-cycle Prod deployment tonight to implement the DB change and restore provisioning for FedLine Developer roles.
 
-Services/Applications Impacted:
-	•	UIM
-	•	ePOD (FedLine Developer role provisioning)
-
-Business/Customer Impact:
-Currently a low business impact. Two active production requests in ePOD for real FedLine subscribers are affected and cannot be provisioned until this is resolved.
-
-Next Steps:
-	•	Engage application team to confirm remediation path prior to scheduled Prod release of template on 9/14.
-	•	Coordinate with NSD to log a Prod-impacting issue for tracking.
-	•	Technical incident call to be started as needed.
+Current impact remains low — 2 production requests in ePOD are affected.
