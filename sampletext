@@ -1,5 +1,5 @@
 Update:
-The team has completed validation in the lower environment. Lawrence applied a database script to remove the impacted link reference and recycled the server, confirming the resolution. This script is the same future DB script that was previously blank, now updated with the required change to remove any unnecessary references. This approach avoids introducing additional code tied to future functionality while resolving the current error. We will proceed with an off-cycle production deployment tonight, which will involve running the updated DB script in production and performing JVM restarts to apply the fix.
+The fix has been deployed to production. The database script to remove the impacted link reference was executed, and JVMs have been restarted. The team is currently performing validation tests to confirm the resolution.
 
 Business Impact:
-Impact remains low — currently only two requests have been affected by this issue.
+Impact remains low — only two requests have been affected so far.
