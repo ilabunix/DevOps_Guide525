@@ -1,3 +1,4 @@
 Update:
-Deployment to fix the CMCv2 → CMCv1 communication issue is in progress.
-The team encountered an issue with XL Deploy and is currently working with the on-call WebSphere Admin to investigate and resolve it.
+Permissions have been corrected and the deployment was successfully completed. However, the invalid token error persists.
+
+The team is now engaging the MuleSoft on-call to assist with further investigation. A runtime recycle in MuleSoft is being considered as the next remediation step.
