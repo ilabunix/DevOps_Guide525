@@ -1,5 +1,13 @@
-Final Update:
-The fix has been deployed to production. The database script to remove the impacted link reference was executed, and JVMs were restarted. Post-deployment validation has confirmed the fix, with APIs functioning properly and no failures observed. Additional checks, including subscriber enrollment report verification, have shown no further issues. Normal operations have resumed.
+Initial Update:
+A new incident (INC1527328) has been reported for the UIM RA Report – Max Open Cursors Exceeded error. This is the same error seen in prior incidents, which we previously addressed by updating the RA Report’s weekly job schedule from Monday to Thursday (implemented last week) to avoid reprocessing last week’s known problematic data.
+
+However, the job still ran on Monday instead of Thursday, processing the same historical data range (including August 5th), which caused the cursors to fill up again. Early investigation suggests that although the Quartz config was updated, the job may still be running under the old Monday schedule due to a hardcoded setting or redundant configuration.
+
+The team is currently:
+	•	Stopping the looping jobs to prevent further DB cursor exhaustion.
+	•	Reviewing Quartz and PHU config to identify why Monday runs are still occurring.
+	•	Determining whether a manual data update is required for recovery (similar to last week).
+	•	Validating current processing state to avoid re-running the problem date range.
 
 Business Impact:
-Impact remained low — only two requests were affected during the incident window.
+Impact is moderate — FedLine Access team has paused processing in UIM to prevent further issues. No SLA impact at this time.
