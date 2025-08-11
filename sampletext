@@ -1,5 +1,4 @@
-Final Update:
-The database parameter update was applied, and JVMs were restarted. The weekly job is no longer running, and dependent jobs have processed successfully. The audit job completed at 11:40 AM with the expected extract range of August 11th (10:15 AM – 11:45 AM). The FedLine Access team resumed processing in UIM at approximately 12:15 PM ET, and the cursor count has remained stable since.
+Update:
+ADTs are finalizing the pipeline fix and will provide deployment instructions to Release Management to execute the deployment. Tentative start time is 3:00 PM CT, pending CSC confirmation for a ~30-minute pause in processing.
 
-Business Impact:
-Impact was moderate — processing in UIM was paused during remediation, but no SLA impact occurred.
+Following deployment, TechOps will re-run the state machines to sync device status, and teams will validate restoration of CMCv2 → CMCv1 communication.
