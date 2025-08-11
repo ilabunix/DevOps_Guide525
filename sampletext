@@ -1,4 +1,5 @@
 Update:
-JVMs are currently being brought down to perform the database update, which includes updating a parameter value to this morning’s date to prevent reprocessing of last week’s data. Once the update is complete, JVMs will be restarted to resume processing.
+The database parameter update has been applied, and JVMs have been restarted. The weekly job is no longer running, and other dependent jobs are processing as expected. The audit job ran successfully at 11:40 AM with the expected extract range of August 11th (10:15 AM – 11:45 AM). Monitoring continues to confirm stability and ensure no additional Max Open Cursor errors occur.
 
-Business impact remains moderate — FedLine Access team continues to pause processing in UIM to avoid further cursor exhaustion. No SLA impact at this time.
+Business Impact:
+Impact remains moderate — FedLine Access team continues to pause processing in UIM to avoid further cursor exhaustion. No SLA impact at this time.
