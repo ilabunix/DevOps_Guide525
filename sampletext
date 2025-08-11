@@ -1,5 +1,9 @@
-Update:
-The database parameter update has been applied, and JVMs have been restarted. The weekly job is no longer running, and other dependent jobs are processing as expected. The audit job ran successfully at 11:40 AM with the expected extract range of August 11th (10:15 AM – 11:45 AM). Monitoring continues to confirm stability and ensure no additional Max Open Cursor errors occur.
+Incident Number: INC1528358
 
-Business Impact:
-Impact remains moderate — FedLine Access team continues to pause processing in UIM to avoid further cursor exhaustion. No SLA impact at this time.
+Issue Recap: Post-EIAM PROD cutover, CMCv2 → CMCv1 communication in CFS1 is broken due to an “Unexpected Token” error, impacting the order notification API.
+
+Services/Applications Impacted: CMCv1, CMCv2 in CFS1 environment.
+
+Business/Customer Impact: Any updates originating from CMCv2 (such as SMS notifications) are not being delivered to CMCv1 until the issue is resolved, potentially delaying customer notifications.
+
+Next Steps: An off-cycle deployment is planned to address the issue. Teams are working with Release Management to expedite the fix and will provide updates as progress is made.
