@@ -1,6 +1,18 @@
-Final Update / Resolution:
-The updated build was deployed successfully, resolving the invalid token issue. TechOps re-ran the state machines to update the state to operational, and verification checks have passed.
+Incident: INC1530650
+Title: FedLine File Origination API – Error 500 Internal Server Error
+Impact: Medium
+Priority: High
+Description:
+Customer is experiencing issues with multiple ACH endpoints returning HTTP 500 Internal Server Error.
+	•	Customer ABA: 101206101 (ACH endpoint)
+	•	Customer ABA: 111300958 (Advice file endpoint)
 
-Deployment to the contingency environment has also been completed. All impacted services are now functioning as expected.
+Endpoints affected:
+	•	Item files: https://api2.federalreserve.org/tserver/filereceipt/v1/search/bytransmission?startDate={date}&endDate={date}
+	•	Advice files: https://api2.federalreserve.org/tserver/settlsvm1/v1/ftch/bypasscodate?processDate={date}
 
-Incident INC1528358 is now resolved.
+Per DI: The above endpoints are returning 500 errors in ACH.
+
+Next Steps / Actions:
+	•	Investigating API failure patterns for both item and advice file retrieval.
+	•	Coordinating with FedLine support for error diagnostics and resolution.
