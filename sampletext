@@ -1,5 +1,11 @@
 Follow-up Update – INC1530650
 
-Investigation identified that API calls to api2.federalreserve.org are failing with HTTP 500 errors after token expiry due to inability to retrieve the JWKS set from https://eapi.frb.org/.../jwks. Firewall logs show traffic from certain Tier 2 runtime IPs being denied by policy when attempting to reach the JWKS endpoint over port 443.
+Firewall policy is blocking connectivity from certain Tier 2 runtime IPs to the JWKS endpoint used by api2.federalreserve.org, resulting in 500 errors after token expiry. Customers impacted have workarounds in place, and payment processing is not affected.
 
-A production firewall change has been proposed to allow required connectivity. As this API is also used by other customers, coordination is ongoing to determine acceptable timing for the change and to validate API functionality post-update.
+Request has been made to test other related APIs to confirm no additional firewall rules are missing, which would avoid the need for a separate NBR later. Current assessment is to plan the firewall change for the upcoming Sunday maintenance window, pending business approval, given limited impact and active workarounds.
+
+Next Steps:
+	•	Complete testing of other related APIs for firewall access gaps.
+	•	Obtain business sign-off for applying firewall change during Sunday maintenance.
+	•	Implement firewall change and validate API token refresh behavior.
+	•	Continue monitoring for any new affected endpoints.
