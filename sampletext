@@ -1,13 +1,5 @@
-Incident Number: INC1530650
+Follow-up Update – INC1530650
 
-Issue Recap:
-Multiple ACH API endpoints for FedLine File Origination are returning HTTP 500 Internal Server Error for customers, impacting both item file and advice file retrieval.
+Investigation identified that API calls to api2.federalreserve.org are failing with HTTP 500 errors after token expiry due to inability to retrieve the JWKS set from https://eapi.frb.org/.../jwks. Firewall logs show traffic from certain Tier 2 runtime IPs being denied by policy when attempting to reach the JWKS endpoint over port 443.
 
-Services/Applications Impacted:
-FedLine File Origination API (ACH item file and advice file endpoints).
-
-Business/Customer Impact:
-Customers are unable to retrieve ACH item files and advice files, potentially delaying payment processing and reconciliation activities.
-
-Next Steps:
-Investigating API failure with FedLine support and reviewing endpoint error patterns. Will provide updates as more information becomes available.
+A production firewall change has been proposed to allow required connectivity. As this API is also used by other customers, coordination is ongoing to determine acceptable timing for the change and to validate API functionality post-update.
