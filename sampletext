@@ -1,18 +1,13 @@
-Incident: INC1530650
-Title: FedLine File Origination API – Error 500 Internal Server Error
-Impact: Medium
-Priority: High
-Description:
-Customer is experiencing issues with multiple ACH endpoints returning HTTP 500 Internal Server Error.
-	•	Customer ABA: 101206101 (ACH endpoint)
-	•	Customer ABA: 111300958 (Advice file endpoint)
+Incident Number: INC1530650
 
-Endpoints affected:
-	•	Item files: https://api2.federalreserve.org/tserver/filereceipt/v1/search/bytransmission?startDate={date}&endDate={date}
-	•	Advice files: https://api2.federalreserve.org/tserver/settlsvm1/v1/ftch/bypasscodate?processDate={date}
+Issue Recap:
+Multiple ACH API endpoints for FedLine File Origination are returning HTTP 500 Internal Server Error for customers, impacting both item file and advice file retrieval.
 
-Per DI: The above endpoints are returning 500 errors in ACH.
+Services/Applications Impacted:
+FedLine File Origination API (ACH item file and advice file endpoints).
 
-Next Steps / Actions:
-	•	Investigating API failure patterns for both item and advice file retrieval.
-	•	Coordinating with FedLine support for error diagnostics and resolution.
+Business/Customer Impact:
+Customers are unable to retrieve ACH item files and advice files, potentially delaying payment processing and reconciliation activities.
+
+Next Steps:
+Investigating API failure with FedLine support and reviewing endpoint error patterns. Will provide updates as more information becomes available.
