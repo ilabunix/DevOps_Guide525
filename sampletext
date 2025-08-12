@@ -1,4 +1,4 @@
 Update:
-Permissions have been corrected and the deployment was successfully completed. However, the invalid token error persists.
+The Order Notification MuleSoft runtime was recycled; however, the invalid token issue persists.
 
-The team is now engaging the MuleSoft on-call to assist with further investigation. A runtime recycle in MuleSoft is being considered as the next remediation step.
+Further investigation revealed that the fix was never pushed to QA and the same incomplete code was deployed to Production. The team is now rebuilding the code with the correct changes and will redeploy.
