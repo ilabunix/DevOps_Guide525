@@ -1,11 +1,1 @@
-Follow-up Update – INC1530650
-
-Firewall policy is blocking connectivity from certain Tier 2 runtime IPs to the JWKS endpoint used by api2.federalreserve.org, resulting in 500 errors after token expiry. Customers impacted have workarounds in place, and payment processing is not affected.
-
-Request has been made to test other related APIs to confirm no additional firewall rules are missing, which would avoid the need for a separate NBR later. Current assessment is to plan the firewall change for the upcoming Sunday maintenance window, pending business approval, given limited impact and active workarounds.
-
-Next Steps:
-	•	Complete testing of other related APIs for firewall access gaps.
-	•	Obtain business sign-off for applying firewall change during Sunday maintenance.
-	•	Implement firewall change and validate API token refresh behavior.
-	•	Continue monitoring for any new affected endpoints.
+Since SRAP has a 24-hour RTO, automated restore isn’t required for Go-Live, but the backup and manual restore process should be tested and documented to meet ORC expectations.
