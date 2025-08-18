@@ -1,1 +1,39 @@
-Since SRAP has a 24-hour RTO, automated restore isn’t required for Go-Live, but the backup and manual restore process should be tested and documented to meet ORC expectations.
+1. Can you share any current exploration or adoption your team is actively working on? How will this work help your team and FRFS?
+
+Answer:
+
+“Our CloudOps team has been exploring how GenAI can assist engineers during operational troubleshooting. One major project is Clara, a GenAI-powered assistant that retrieves step-by-step solutions from our internal playbooks hosted in Confluence.
+
+We integrated AWS Bedrock (using Titan embeddings + Claude Sonnet), OpenSearch Vector Search, and a lightweight Lambda-based backend. The assistant is accessible via a chat interface — no login or tool-switching needed.
+
+It’s already reducing time to resolution, especially during on-call shifts. Engineers no longer have to dig through lengthy documentation — Clara gives direct, contextual answers instantly.
+
+This not only helps our team become more efficient but also enables quicker incident response across the Federal Reserve’s broader cloud infrastructure.”
+
+⸻
+
+2. Have you encountered any setbacks or challenges along the way? What key learnings have you gained from those experiences?
+
+Answer:
+
+“Absolutely. We faced a few roadblocks:
+	•	LangChain dependency issues during early prototyping — which led us to switch to a custom lightweight implementation
+	•	Confluence sandbox restrictions meant we had to simulate with an S3-based knowledge base for our POC
+	•	And getting high-quality responses required trial-and-error with prompt engineering and embedding quality
+
+Key takeaway? Start simple, test fast, and iterate. Also, clean documentation matters — because GenAI is only as good as the data you give it.”
+
+⸻
+
+3. What are you most excited about when it comes to AI and the potential that it could provide in years to come for your team and FRFS?
+
+Answer:
+
+“I’m most excited about how AI will evolve from being a ‘tool’ to becoming a virtual teammate.
+
+We’re exploring how Clara can eventually:
+	•	Guide new engineers through complex systems
+	•	Auto-generate RCAs based on incident logs
+	•	And even take proactive action during failures using scripted playbooks
+
+For FRFS, this means transforming operational efficiency — making our systems more resilient, reducing MTTR, and preserving institutional knowledge in real time.”
