@@ -1,1 +1,11 @@
-The issue is that our Lambda@Edge converts 403 errors to 404, which causes CloudFront to serve the custom 404 page externally and unintentionally reveal part of the site. As a quick fix, I’m pointing the 404 error response to our existing generic 403 page instead, so even after the rewrite, users only see the intended ‘403 Forbidden’ message.
+Root cause:
+The Lambda@Edge function currently rewrites all 403 responses as 404, which causes CloudFront to serve the custom 404 page. This unintentionally exposes parts of the site (like navigation or layout) to external users even when access is blocked by WAF.
+
+Quick fix (done/planned):
+Temporarily pointing the 404 error response to our existing generic 403 page to avoid any content leakage, even after the Lambda rewrite.
+
+Real fix (proposed):
+Remove the Lambda@Edge function entirely and rely on WAF + CloudFront custom error responses:
+	•	Keep 403 and 404 error responses configured separately.
+	•	Set both to short TTLs (0) and show minimal /403.html and /404.html pages respectively.
+	•	This ensures external users blocked by WAF only see the generic 403 page, while internal users still get appropriate messages for missing or forbidden pages.
