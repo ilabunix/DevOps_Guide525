@@ -1,0 +1,506 @@
+resource "grafana_rule_group" "ecs_alerts" {
+  for_each        = toset(var.ecs_cluster_names)
+  name            = "ECS Alerts - ${each.key}"
+  folder_uid      = var.terraform_folder_uid
+  interval_seconds = 300
+
+  #############################
+  # 1. ECS CPUReservation > 95%
+  #############################
+  rule {
+    name      = "ECS CPUReservation - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/ECS"
+        metricName = "CPUReservation"
+        dimensions = { ClusterName = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [95] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels = {
+      severity = "high"
+      service  = "ecs"
+    }
+    annotations = {
+      summary = "ECS CPUReservation > 95% on ${each.key}"
+    }
+  }
+
+  #############################
+  # 2. ECS MemoryReservation > 90%
+  #############################
+  rule {
+    name      = "ECS MemoryReservation - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/ECS"
+        metricName = "MemoryReservation"
+        dimensions = { ClusterName = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [90] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels = {
+      severity = "medium"
+      service  = "ecs"
+    }
+    annotations = {
+      summary = "ECS MemoryReservation > 90% on ${each.key}"
+    }
+  }
+
+  ########################################################################
+  # 3. ECS DesiredTaskCount vs Running mismatch (alert if A != B for 15m)
+  ########################################################################
+  rule {
+    name      = "ECS TaskCount Mismatch - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 900 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/ECS"
+        metricName = "RunningTaskCount"
+        dimensions = { ClusterName = each.key }
+        statistics = ["Sum"]
+        period     = 60
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 900 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "B"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/ECS"
+        metricName = "DesiredTaskCount"
+        dimensions = { ClusterName = each.key }
+        statistics = ["Sum"]
+        period     = 60
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 900 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "C"
+        expression = "A != B"
+        type      = "math"
+      })
+    }
+
+    data {
+      ref_id = "D"
+      relative_time_range { from = 900 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "D"
+        expression = "C"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [0] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "C", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels = {
+      severity = "critical"
+      service  = "ecs"
+    }
+    annotations = {
+      summary = "ECS Desired vs Running TaskCount mismatch for > 15 minutes on ${each.key}"
+    }
+  }
+}
+
+resource "grafana_rule_group" "rds_alerts" {
+  for_each         = toset(var.rds_instance_ids)
+  name             = "RDS Alerts - ${each.key}"
+  folder_uid       = var.terraform_folder_uid
+  interval_seconds = 300
+
+  #######################################
+  # 1. RDS FreeStorageSpace < 10% (Critical)
+  #######################################
+  rule {
+    name      = "RDS FreeStorage Low - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/RDS"
+        metricName = "FreeStorageSpace"
+        dimensions = { DBInstanceIdentifier = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "lt", params = [var.rds_free_storage_threshold] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels         = { severity = "critical", service = "rds" }
+    annotations    = { summary = "RDS FreeStorageSpace < ${var.rds_free_storage_threshold} bytes for ${each.key}" }
+  }
+
+  #######################################
+  # 2. RDS CPUUtilization > 95%
+  #######################################
+  rule {
+    name      = "RDS CPU Utilization - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/RDS"
+        metricName = "CPUUtilization"
+        dimensions = { DBInstanceIdentifier = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [95] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels         = { severity = "critical", service = "rds" }
+    annotations    = { summary = "RDS CPUUtilization > 95% for ${each.key}" }
+  }
+
+  #######################################
+  # 3. RDS DatabaseConnections > 90% of max
+  #######################################
+  rule {
+    name      = "RDS DB Connections - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/RDS"
+        metricName = "DatabaseConnections"
+        dimensions = { DBInstanceIdentifier = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [90] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels         = { severity = "high", service = "rds" }
+    annotations    = { summary = "RDS DBConnections > 90% of max for ${each.key}" }
+  }
+
+  #######################################
+  # 4. RDS ReadLatency > 100ms
+  #######################################
+  rule {
+    name      = "RDS Read Latency - ${each.key}"
+    condition = "C"
+
+    data {
+      ref_id = "A"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        refId      = "A"
+        datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+        region     = var.aws_region
+        namespace  = "AWS/RDS"
+        metricName = "ReadLatency"
+        dimensions = { DBInstanceIdentifier = each.key }
+        statistics = ["Average"]
+        period     = 300
+        type       = "timeseries"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId     = "B"
+        expression = "A"
+        type      = "reduce"
+        reducer   = "last"
+      })
+    }
+
+    data {
+      ref_id = "C"
+      relative_time_range { from = 300 to = 0 }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        refId      = "C"
+        expression = "B"
+        type       = "threshold"
+        conditions = [{
+          evaluator = { type = "gt", params = [100] }
+          operator  = { type = "and" }
+          reducer   = { type = "last", params = [] }
+          query     = { refId = "B", type = "reduce" }
+        }]
+      })
+    }
+
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+    labels         = { severity = "medium", service = "rds" }
+    annotations    = { summary = "RDS ReadLatency > 100ms for ${each.key}" }
+  }
+}
+
+
+----
+
+variable "ecs_cluster_names" {
+  description = "ECS cluster names to monitor"
+  type        = list(string)
+}
+
+variable "rds_instance_ids" {
+  description = "RDS instance identifiers to monitor"
+  type        = list(string)
+}
+
+variable "rds_free_storage_threshold" {
+  description = "Free storage space alert threshold in bytes (e.g., 10GB)"
+  type        = number
+  default     = 10737418240 # 10 * 1024 * 1024 * 1024
+}
+
+----
+
+ecs_cluster_names = [
+  "cluster-prod",
+  "cluster-dev"
+]
+
+rds_instance_ids = [
+  "db-prod-instance",
+  "db-test-instance"
+]
+
+rds_free_storage_threshold = 10737418240
+
+---
+
+variable "ecs_cluster_names" {
+  type = list(string)
+}
+
+variable "rds_instance_ids" {
+  type = list(string)
+}
+
+variable "rds_free_storage_threshold" {
+  type = number
+}
+
+
