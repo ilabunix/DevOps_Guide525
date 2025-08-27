@@ -1,5 +1,0 @@
-Thanks for raising this. As discussed in yesterday’s go-live call, the plan is for TechOps to update the CloudFront path pattern so /contacts/* traffic is routed to the Bloomreach ALB. From there, the ADT team will handle the redirect in Bloomreach code so that legacy URLs point to the new ContactUs page.
-
-On the question of whether this should remain a long-term forward or if there’s an alternative approach, I’ve added James here since he’ll be implementing the redirect logic within Bloomreach and can provide more detail on the intended setup.
-
-ideally, this type of redirect requirement should have been captured during the design or requirements phase since it relates to transition planning from ONPREM to Bloomreach. It surfaced during go-live discussions because the focus was primarily on functionality and cutover, and the legacy bookmark/use-case scenario wasn’t raised until then.
