@@ -1,0 +1,94 @@
+##############################################
+# ECS DesiredTaskCount vs Running mismatch
+##############################################
+rule {
+  name      = "ECS TaskCount Mismatch - ${var.ecs_cluster_names}"
+  condition = "D"
+
+  data {
+    ref_id = "A"
+    relative_time_range {
+      from = 900
+      to   = 0
+    }
+    datasource_uid = var.cloudwatch_data_source_uid
+    model = jsonencode({
+      refId      = "A"
+      datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+      region     = var.aws_region
+      namespace  = "AWS/ECS"
+      metricName = "RunningTaskCount"
+      dimensions = { ClusterName = var.ecs_cluster_names }
+      statistics = ["Sum"]
+      period     = "60"
+      type       = "timeseries"
+    })
+  }
+
+  data {
+    ref_id = "B"
+    relative_time_range {
+      from = 900
+      to   = 0
+    }
+    datasource_uid = var.cloudwatch_data_source_uid
+    model = jsonencode({
+      refId      = "B"
+      datasource = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+      region     = var.aws_region
+      namespace  = "AWS/ECS"
+      metricName = "DesiredTaskCount"
+      dimensions = { ClusterName = var.ecs_cluster_names }
+      statistics = ["Sum"]
+      period     = "60"
+      type       = "timeseries"
+    })
+  }
+
+  data {
+    ref_id = "C"
+    relative_time_range {
+      from = 900
+      to   = 0
+    }
+    datasource_uid = "__expr__"
+    model = jsonencode({
+      refId      = "C"
+      type       = "math"
+      expression = "abs(A - B)"
+    })
+  }
+
+  data {
+    ref_id = "D"
+    relative_time_range {
+      from = 900
+      to   = 0
+    }
+    datasource_uid = "__expr__"
+    model = jsonencode({
+      refId      = "D"
+      type       = "threshold"
+      expression = "C"
+      conditions = [{
+        evaluator = { type = "gt", params = [0] }
+        operator  = { type = "and" }
+        reducer   = { type = "last", params = [] }
+        query     = { refId = "C", type = "reduce" }
+      }]
+    })
+  }
+
+  no_data_state  = "OK"
+  exec_err_state = "Alerting"
+
+  labels = {
+    severity = "critical"
+    service  = "ecs"
+    email    = var.deploy_env
+  }
+
+  annotations = {
+    summary = "ECS Desired vs Running TaskCount mismatch for > 15 minutes on ${var.ecs_cluster_names}"
+  }
+}
