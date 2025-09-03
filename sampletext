@@ -1,73 +1,7 @@
-ABCX – UAT & Smoke Testing Guide
+Hi Team,
 
-Last Updated: 
-Owner: <your name/team>
-Environment: UAT
+I have completed the UAT testing for the SAC Download application in the UAT/QA environment. The testing results have been documented in the Confluence page for future reference and to support smoke testing going forward.
 
-⸻
+Regarding the Geo Restricted countries testing, I could not find an option in Pingdom to specifically select restricted countries to validate URL blocking. If we already have confirmation that Geo-fencing has been enabled for the restricted countries list (as shared in the initial Akamai integration meetings), then we should be covered on this front.
 
-📌 Purpose
-
-This document defines the steps for conducting Smoke Testing and User Acceptance Testing (UAT) for the ABCX application.
-	•	Smoke Testing (Browser): Quick validation that the SAC client package/ZIP files can be downloaded.
-	•	UAT Testing (API Gateway): Deeper validation of API logic and error handling.
-
-⸻
-
-🔑 Pre-Requisites
-	•	Access to UAT AWS account (Region: us-east-1).
-	•	Browser access to /fla and /flw endpoints.
-	•	Valid and invalid download codes.
-	•	SAC client download credentials (if applicable).
-	•	Familiarity with AWS API Gateway test console.
-
-⸻
-
-🔎 Smoke Testing – Browser Validation
-
-Objective: Verify that SAC client package downloads work correctly.
-
-Steps
-	1.	Open the /fla link in a browser.
-	•	Enter a valid download code → Verify SAC client ZIP file downloads successfully.
-	•	Enter an invalid code → Verify error page/message is displayed.
-	2.	Repeat the same steps with /flw.
-	3.	Confirm downloaded files are valid (able to open/unzip).
-
-Expected Results
-	•	Valid code → ZIP file downloads successfully.
-	•	Invalid code → Error page/message shown.
-
-Evidence
-	•	Screenshot 1: Browser entry screen for /fla with valid code.
-	•	Screenshot 2: Successful ZIP file download confirmation.
-	•	Screenshot 3: Invalid code attempt showing error page.
-
-(Insert screenshots here)
-
-⸻
-
-🧪 UAT Testing – API Gateway
-
-Objective: Validate the API responses across different scenarios.
-
-Steps
-	1.	Log in to AWS Console → API Gateway (Region: us-east-1).
-	2.	Locate the ABCX API.
-	3.	Select the POST method → Click Test.
-	4.	Input test payloads for different scenarios.
-
-Test Scenarios & Payloads
-
-✅ Valid Code + Valid Customer Type
-
-Request Payload Example:
-
-
-Evidence
-	•	Screenshot 1: API GW test console with valid payload and success response.
-	•	Screenshot 2: Invalid code test with error response.
-	•	Screenshot 3: Expired/used code scenario response.
-
-(Insert screenshots here)
-
+Please let me know if further validation is needed.
