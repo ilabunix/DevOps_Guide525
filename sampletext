@@ -1,7 +1,0 @@
-Hi Team,
-
-I have completed the UAT testing for the SAC Download application in the UAT/QA environment. The testing results have been documented in the Confluence page for future reference and to support smoke testing going forward.
-
-Regarding the Geo Restricted countries testing, I could not find an option in Pingdom to specifically select restricted countries to validate URL blocking. If we already have confirmation that Geo-fencing has been enabled for the restricted countries list (as shared in the initial Akamai integration meetings), then we should be covered on this front.
-
-Please let me know if further validation is needed.
