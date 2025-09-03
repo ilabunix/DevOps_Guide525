@@ -1,3 +1,0 @@
-Thanks for your note and for the feedback on Clara. At this stage, we’re actively working on the path to production. Restricted FR is not yet supported, but we’re exploring options as part of that roadmap. Current focus remains on CloudOps troubleshooting and playbooks, with plans to expand coverage to additional areas. QEs haven’t piloted it yet, but that’s something we see value in as we broaden usage.
-
-Happy to connect further to discuss how Clara might support SETO and test engineering needs.
