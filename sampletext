@@ -1,5 +1,1 @@
-I don’t think doing a full tf destroy in East is the right approach, since that would wipe out resources Terraform manages and complicate the state.
-
-Instead, I can temporarily remove the East ALB subnets/targets using my privileged role to simulate an outage. That will cause Akamai to mark East as unhealthy and shift traffic to West. Once testing is complete, I can re-add the subnets/targets and restore East.
-
-Since no Terraform pipelines are running for this UAT environment, there’s no risk of state conflict as long as we restore before the next apply.
+Since the public cert is associated with the ALB, Akamai’s origin is the ALB and that’s where health checks are happening. Disabling/destroying API Gateway wouldn’t necessarily trigger failover, but removing East ALB targets/subnets will. That approach will cleanly simulate an outage for Akamai to fail traffic over to West, and we can restore East afterward without impacting Terraform state.
