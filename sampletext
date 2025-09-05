@@ -1,0 +1,5 @@
+I reviewed ALB metrics and confirmed East is serving all traffic, West is idle. If we want to test failover via Akamai, we cannot just flip Route53 (since Akamai manages origin failover). The correct options are:
+	1.	Coordinate with Akamai to steer traffic to West temporarily, or
+	2.	Simulate an East outage (e.g., remove ALB targets/subnets in UAT) so Akamai health checks fail and traffic shifts to West.
+
+Please confirm which approach we want to take so I can proceed with testing.
