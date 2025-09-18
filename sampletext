@@ -2,111 +2,79 @@ rule {
   name      = "API Gateway 4XX - ${var.api_gateway_name}-${var.stage_name}"
   condition = "C"
 
+  # Query block (A) - CloudWatch 4XXError
   data {
     ref_id = "A"
     relative_time_range {
-      from = 60
+      from = 300
       to   = 0
     }
     datasource_uid = var.cloudwatch_data_source_uid
-    model = jsondecode(jsonencode({
-      datasource   = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
-      region       = var.aws_region
-      namespace    = "AWS/ApiGateway"
-      metricName   = "4XXError"
-      statistics   = ["Sum"]
-      dimensions   = {
-        ApiName    = var.api_gateway_name
-        Stage      = var.stage_name
+    model = {
+      datasource = {
+        type = "cloudwatch"
+        uid  = var.cloudwatch_data_source_uid
       }
-      period       = "60"
-      refId        = "A"
-      expression   = ""
-      id           = ""
-      hide         = false
-      type         = "timeseries"
-    }))
+      alias          = ""
+      region         = var.region
+      namespace      = "AWS/ApiGateway"
+      metricName     = "4XXError"
+      stat           = "Sum"
+      period         = "60"
+      dimensions = {
+        ApiName = var.api_gateway_name
+        Stage   = var.stage_name
+      }
+      queryType     = "timeSeriesQuery"
+      intervalMs    = 1000
+      maxDataPoints = 43200
+      id            = "A"
+    }
   }
 
+  # Reduce block (B) - take last value from A
   data {
-    ref_id = "B"
-    datasource_uid = var.cloudwatch_data_source_uid
-    model = jsondecode(jsonencode({
-      type     = "reduce"
-      reducer  = "sum"
-      inputs   = [{ refId = "A", type = "query" }]
-      refId    = "B"
-    }))
+    ref_id         = "B"
+    datasource_uid = "__expr__"
+    model = {
+      type       = "reduce"
+      expression = "A"
+      reducer = {
+        type = "last"
+      }
+      conditions = []
+    }
   }
 
+  # Threshold block (C) - fire if B > threshold
   data {
-    ref_id = "C"
-    datasource_uid = var.cloudwatch_data_source_uid
-    model = jsondecode(jsonencode({
-      type     = "threshold"
-      conditions = [{
-        evaluator = {
-          type   = "gt"
-          params = [var.api_gateway_4xx_threshold]
-        }
-        operator = { type = "and" }
-        reducer  = { type = "sum" }
-        query    = { refId = "B", type = "query" }
-        type     = "gt"
-      }]
-      refId = "C"
-    }))
+    ref_id         = "C"
+    datasource_uid = "__expr__"
+    model = {
+      type       = "threshold"
+      expression = "B"
+      evaluator = {
+        type   = "gt"
+        params = [var.api_gateway_4xx_threshold]
+      }
+      conditions = []
+    }
+  }
+
+  condition       = "C"
+  interval        = "60s"
+  no_data_state   = "OK"
+  exec_err_state  = "Alerting"
+
+  annotations = {
+    summary        = "High 4XX errors on API ${var.api_gateway_name}"
+    runbook_url    = "https://confluence.yourdomain.net/runbooks/apigw-4xx-errors"
+    __dashboardUid = var.api_gateway_dashboard_uid
+    __panelId      = var.api_gateway_panel_id
   }
 
   labels = {
     severity = "high"
     email    = var.deploy_env
   }
-
-  annotations = {
-    summary       = "High 4XX errors on API ${var.api_gateway_name}"
-    runbook_url   = "https://confluence.example.com/runbooks/api-4xx-alert"
-    dashboardUid  = "your_dashboard_uid_here"
-    panelId       = "15" # update based on your panel
-  }
-
-  no_data_state   = "NoData"    # So it doesn't alert on idle APIs
-  exec_err_state  = "Alerting"
 }
-
-
-
-annotations = {
-  dashboard_uid = var.api_gateway_dashboard_uid
-  panel_id      = var.api_gateway_panel_id
-  runbook_url   = var.api_gateway_runbook_url
-  summary       = "High 4XX errors on API Gateway: ${var.api_gateway_name}-${var.stage_name}"
-}
-
-variable "api_gateway_dashboard_uid" {
-  description = "Dashboard UID for the API Gateway panel"
-  type        = string
-}
-
-variable "api_gateway_panel_id" {
-  description = "Panel ID for the API Gateway metrics panel"
-  type        = number
-}
-
-variable "api_gateway_runbook_url" {
-  description = "Runbook URL for this alert"
-  type        = string
-}
-
-variable "api_gateway_name" {
-  description = "Name of the API Gateway"
-  type        = string
-}
-
-variable "stage_name" {
-  description = "Stage name of the API Gateway"
-  type        = string
-}
-
-
-
