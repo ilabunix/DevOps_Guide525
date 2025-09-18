@@ -1,90 +1,125 @@
-# Query block (A) - CloudWatch metric
-data {
-  ref_id = "A"
-  relative_time_range {
-    from = 300
-    to   = 0
-  }
-  datasource_uid = var.cloudwatch_data_source_uid
-  model = jsonencode({
-    datasource = "cloudwatch"
-    region     = var.aws_region
-    namespace  = "AWS/ApiGateway"
-    metricName = "4XXError"
-    dimensions = {
-      ApiName = var.api_gateway_name
-      Stage   = var.stage_name
-    }
-    statistics  = ["Sum"]
-    period      = "60"
-    refId       = "A"
-    type        = "timeseries"
-  })
-}
+resource "grafana_rule_group" "apigw_4xx_alerts" {
+  org_id         = var.grafana_org_id
+  name           = "API Gateway 4XX - ${var.api_gateway_name}-${var.stage_name}"
+  folder_uid     = var.terraform_folder_uid
+  interval_seconds = 60
 
-# Reduce block (B) - take last value from A
-data {
-  ref_id = "B"
-  relative_time_range {
-    from = 0
-    to   = 0
-  }
-  datasource_uid = "__expr__"
-  model = jsonencode({
-    type       = "reduce"
-    reducer    = "last"
-    expression = "A"
-    datasource = {
-      type = "__expr__"
-      uid  = "__expr__"
-    }
-    refId = "B"
-  })
-}
+  rule {
+    name      = "API Gateway 4XX - ${var.api_gateway_name}-${var.stage_name}"
+    condition = "C"
 
-# Threshold block (C) - evaluator on B
-data {
-  ref_id = "C"
-  relative_time_range {
-    from = 0
-    to   = 0
-  }
-  datasource_uid = "__expr__"
-  model = jsonencode({
-    type       = "threshold"
-    expression = "B"
-    conditions = [{
-      evaluator = {
-        type   = "gt"
-        params = [var.api_gateway_4xx_threshold]
+    ##############################
+    # Block A - CloudWatch Query #
+    ##############################
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 300
+        to   = 0
       }
-      operator = { type = "and" }
-      reducer  = { type = "last" }
-      query    = { params = ["B"] }
-    }]
-    datasource = {
-      type = "__expr__"
-      uid  = "__expr__"
+      datasource_uid = var.cloudwatch_data_source_uid
+      model = jsonencode({
+        datasource = {
+          type = "cloudwatch"
+          uid  = var.cloudwatch_data_source_uid
+        }
+        namespace        = "AWS/ApiGateway"
+        metricName       = "4XXError"
+        statistic        = "Sum"
+        period           = "60"
+        region           = var.aws_region
+        dimensions       = {
+          ApiName = var.api_gateway_name
+          Stage   = var.stage_name
+        }
+        refId            = "A"
+        queryMode        = "Metrics"
+        type             = "timeserie"
+        alias            = "{{metric}}"
+        intervalMs       = 1000
+        maxDataPoints    = 43200
+        matchExact       = true
+        expression       = ""
+        id               = ""
+        instant          = false
+        metricEditorMode = 0
+        sqlExpression    = ""
+      })
     }
-    refId = "C"
-  })
-}
 
-# The rule should now use C as the final condition
-rule {
-  name      = "API Gateway 4XX Errors - ${var.api_gateway_name}-${var.stage_name}"
-  condition = "C"
+    ##################################
+    # Block B - Reduce (last value)  #
+    ##################################
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        type       = "reduce"
+        expression = "A"
+        reducer    = "last"
+        datasource = {
+          type = "__expr__"
+          uid  = "__expr__"
+        }
+        refId         = "B"
+        intervalMs    = 1000
+        maxDataPoints = 43200
+      })
+    }
 
-  no_data_state   = "OK"
-  exec_err_state  = "Alerting"
-  annotations = {
-    summary   = "High 4XX errors on API ${var.api_gateway_name}"
-    runbook_url = var.application_runbook_url
-    __dashboardUid__ = var.api_gateway_dashboard_uid
-    __panelId__      = var.api_gateway_panel_id
-  }
-  labels = {
-    severity = "high"
-    email    = var.deploy_env
+    ##############################################
+    # Block C - Threshold (fire if B > threshold) #
+    ##############################################
+    data {
+      ref_id = "C"
+      relative_time_range {
+        from = 0
+        to   = 0
+      }
+      datasource_uid = "__expr__"
+      model = jsonencode({
+        type       = "threshold"
+        expression = "B"
+        conditions = [{
+          evaluator = {
+            type   = "gt"
+            params = [var.api_gateway_4xx_threshold]
+          }
+          operator = { type = "and" }
+          query    = { params = ["B"] }
+          reducer  = { type = "last" }
+          type     = "query"
+        }]
+        datasource = {
+          type = "__expr__"
+          uid  = "__expr__"
+        }
+        refId         = "C"
+        intervalMs    = 1000
+        maxDataPoints = 43200
+      })
+    }
+
+    ##############################
+    # Rule settings / metadata   #
+    ##############################
+    no_data_state  = "OK"
+    exec_err_state = "Alerting"
+
+    annotations = {
+      summary        = "High 4XX errors on API ${var.application_name}-${var.api_gateway_name}"
+      runbook_url    = var.application_runbook_url
+      __dashboardUid = var.api_gateway_dashboard_uid
+      __panelId      = var.api_gateway_panel_id
+    }
+
+    labels = {
+      severity = "high"
+      email    = var.deploy_env
+    }
   }
 }
