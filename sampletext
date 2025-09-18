@@ -1,6 +1,0 @@
-
-Thanks for reaching out. Here’s how TechOps can support the FLM ACC migration activities:
-	1.	Help onboard FLM application – TechOps will assist with onboarding to Grafana and Elma. The Application Development Teams (ADTs) will handle onboarding to SonarQube and Nexus IQ.
-	2.	Setup Grafana – TechOps will help in setting up dashboards and alerts for infrastructure monitoring of the AWS resources used by the application.
-
-Let me know if you’d like us to coordinate a working session with ADTs to align on the specifics.
