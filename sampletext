@@ -1,31 +1,47 @@
-locals {
-  apigw_query_model = {
-    datasource = {
-      type = "cloudwatch"
-      uid  = var.cloudwatch_data_source_uid
-    }
-    namespace        = "AWS/ApiGateway"
-    metricName       = "4XXError"
-    statistic        = "Sum"
-    period           = "60"
-    region           = var.aws_region
-    dimensions = {
-      ApiName = var.api_gateway_name
-      Stage   = var.stage_name
-    }
-    refId             = "A"
-    queryMode         = "Metrics"
-    queryType         = "CloudWatchMetrics"
-    metricQueryType   = 0
-    type              = "timeseries"
-    alias             = "{{metric}}"
-    intervalMs        = 1000
-    maxDataPoints     = 43200
-    matchExact        = true
-    expression        = ""
-    id                = ""
-    instant           = false
-    metricEditorMode  = 0
-    sqlExpression     = ""
+data {
+  ref_id = "A"
+
+  relative_time_range {
+    from = 300
+    to   = 0
   }
+
+  datasource_uid = var.cloudwatch_data_source_uid
+
+  model = jsonencode({
+    alias              = "{{metric}} {{stat}}"
+    application        = { filter = "" }
+    datasource         = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
+    dimensions         = {
+      ApiName = [var.api_gateway_name]
+      Stage   = [var.stage_name]
+    }
+    expression         = ""
+    functions          = []
+    group              = { filter = "" }
+    highResolution     = false
+    host               = { filter = "" }
+    id                 = "e400"
+    instant            = false
+    intervalMs         = 1000
+    item               = { filter = "" }
+    label              = "${PROP('Dim.ApiName')} - ${PROP('MetricName')} ${PROP('Stat')}"
+    logGroups          = []
+    matchExact         = true
+    maxDataPoints      = 43200
+    metricEditorMode   = 0
+    metricName         = "4XXError"
+    metricQueryType    = 0
+    mode               = 0
+    namespace          = "AWS/ApiGateway"
+    options            = { showDisabledItems = false }
+    period             = "60"
+    queryLanguage      = "CWLI"
+    queryMode          = "Metrics"
+    range              = true
+    refId              = "A"
+    region             = var.aws_region
+    sqlExpression      = ""
+    statistic          = "Sum"
+  })
 }
