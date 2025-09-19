@@ -1,12 +1,14 @@
-export secretName="/adt/frfs/cmc/dev/grafana-api-token"
+variables:
+  # default empty, will be set in before_script
+  TF_VAR_grafana_auth: ""
 
-secretArn=$(aws secretsmanager list-secrets \
-  --region us-gov-east-1 \
-  --query "SecretList[?Name=='$secretName'].ARN | [0]" \
-  --output text)
-
-export TF_VAR_grafana_auth=$(aws secretsmanager get-secret-value \
-  --secret-id "$secretArn" \
-  --region us-gov-east-1 \
-  --query 'SecretString' \
-  --output text)
+before_script:
+  - |
+    echo "[INFO] Checking LZ account: $IN_LZ_ACCOUNT_NAME"
+    if [[ "$IN_LZ_ACCOUNT_NAME" == "PROD" ]]; then
+      export TF_VAR_grafana_auth="$GRAFANA_API_TOKEN_PROD"
+      echo "[INFO] Using PROD Grafana token"
+    else
+      export TF_VAR_grafana_auth="$GRAFANA_API_TOKEN_NONPROD"
+      echo "[INFO] Using NONPROD Grafana token"
+    fi
