@@ -1,74 +1,41 @@
-resource "grafana_rule_group" "apigw_alerts" {
-  folder_uid = var.folder_uid
-  name       = "${var.api_gateway_name}-alerts"
-  interval   = "1m"
-
-  rule {
-    name      = "API 4XX Errors - ${var.api_gateway_name}-${var.stage_name}"
-    condition = "C"
-
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 300
-        to   = 0
-      }
-      datasource_uid = var.cloudwatch_datasource_uid
-      model = jsonencode({
-        refId            = "A"
-        region           = "us-gov-east-1"
-        namespace        = "AWS/ApiGateway"
-        metricName       = "4XXError"
-        dimensions       = {
-          ApiName = var.api_gateway_name
-          Stage   = var.stage_name
-        }
-        period           = "60"
-        statistic        = "Sum"
-        matchExact       = true
-        maxDataPoints    = 43200
-        metricEditorMode = 0
-        queryMode        = "Metrics"
-        queryLanguage    = "CWL"
-        type             = "timeseries"
-        expression       = ""
-      })
-    }
-
-    data {
-      ref_id    = "B"
-      type      = "reduce"
-      expression = "A"
-      model = jsonencode({
-        reducer = "last"
-        input   = "A"
-        mode    = "strict"
-      })
-    }
-
-    data {
-      ref_id    = "C"
-      type      = "threshold"
-      expression = "B"
-      model = jsonencode({
-        threshold = 1
-        type      = "gt"
-      })
-    }
-
-    no_data_state   = "OK"
-    exec_err_state  = "Alerting"
-
-    labels = {
-      severity = "high"
-      email    = var.deploy_env
-    }
-
-    annotations = {
-      summary          = "High 4XX errors on API ${var.api_gateway_name}"
-      runbook_url      = var.application_runbook_url
-      __dashboardUid__ = var.api_gateway_dashboard_uid
-      __panelId__      = var.api_gateway_panel_id
-    }
+##################################
+# Block A - CloudWatch Query     #
+##################################
+data {
+  ref_id = "A"
+  relative_time_range {
+    from = 300
+    to   = 0
   }
+
+  datasource_uid = var.cloudwatch_data_source_uid
+  model = jsonencode({
+    datasource = {
+      type = "cloudwatch"
+      uid  = var.cloudwatch_data_source_uid
+    }
+    namespace        = "AWS/ApiGateway"
+    metricName       = "4XXError"
+    statistic        = "Sum"
+    period           = "60"
+    region           = var.aws_region
+    dimensions       = {
+      ApiName = var.api_gateway_name
+      Stage   = var.stage_name
+    }
+    refId            = "A"
+    queryMode        = "Metrics"
+    queryType        = "CloudWatchMetrics"   # ✅ NEW
+    metricQueryType  = 0                     # ✅ NEW
+    type             = "timeseries"
+    alias            = "{{metric}}"
+    intervalMs       = 1000
+    maxDataPoints    = 43200
+    matchExact       = true
+    expression       = ""
+    id               = ""
+    instant          = false
+    metricEditorMode = 0
+    sqlExpression    = ""
+  })
 }
