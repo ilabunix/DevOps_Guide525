@@ -1,125 +1,74 @@
-resource "grafana_rule_group" "apigw_4xx_alerts" {
-  org_id         = var.grafana_org_id
-  name           = "API Gateway 4XX - ${var.api_gateway_name}-${var.stage_name}"
-  folder_uid     = var.terraform_folder_uid
-  interval_seconds = 60
+resource "grafana_rule_group" "apigw_alerts" {
+  folder_uid = var.folder_uid
+  name       = "${var.api_gateway_name}-alerts"
+  interval   = "1m"
 
   rule {
-    name      = "API Gateway 4XX - ${var.api_gateway_name}-${var.stage_name}"
+    name      = "API 4XX Errors - ${var.api_gateway_name}-${var.stage_name}"
     condition = "C"
 
-    ##############################
-    # Block A - CloudWatch Query #
-    ##############################
     data {
       ref_id = "A"
       relative_time_range {
         from = 300
         to   = 0
       }
-      datasource_uid = var.cloudwatch_data_source_uid
+      datasource_uid = var.cloudwatch_datasource_uid
       model = jsonencode({
-        datasource = {
-          type = "cloudwatch"
-          uid  = var.cloudwatch_data_source_uid
-        }
+        refId            = "A"
+        region           = "us-gov-east-1"
         namespace        = "AWS/ApiGateway"
         metricName       = "4XXError"
-        statistic        = "Sum"
-        period           = "60"
-        region           = var.aws_region
         dimensions       = {
           ApiName = var.api_gateway_name
           Stage   = var.stage_name
         }
-        refId            = "A"
-        queryMode        = "Metrics"
-        type             = "timeserie"
-        alias            = "{{metric}}"
-        intervalMs       = 1000
-        maxDataPoints    = 43200
+        period           = "60"
+        statistic        = "Sum"
         matchExact       = true
-        expression       = ""
-        id               = ""
-        instant          = false
+        maxDataPoints    = 43200
         metricEditorMode = 0
-        sqlExpression    = ""
+        queryMode        = "Metrics"
+        queryLanguage    = "CWL"
+        type             = "timeseries"
+        expression       = ""
       })
     }
 
-    ##################################
-    # Block B - Reduce (last value)  #
-    ##################################
     data {
-      ref_id = "B"
-      relative_time_range {
-        from = 0
-        to   = 0
-      }
-      datasource_uid = "__expr__"
+      ref_id    = "B"
+      type      = "reduce"
+      expression = "A"
       model = jsonencode({
-        type       = "reduce"
-        expression = "A"
-        reducer    = "last"
-        datasource = {
-          type = "__expr__"
-          uid  = "__expr__"
-        }
-        refId         = "B"
-        intervalMs    = 1000
-        maxDataPoints = 43200
+        reducer = "last"
+        input   = "A"
+        mode    = "strict"
       })
     }
 
-    ##############################################
-    # Block C - Threshold (fire if B > threshold) #
-    ##############################################
     data {
-      ref_id = "C"
-      relative_time_range {
-        from = 0
-        to   = 0
-      }
-      datasource_uid = "__expr__"
+      ref_id    = "C"
+      type      = "threshold"
+      expression = "B"
       model = jsonencode({
-        type       = "threshold"
-        expression = "B"
-        conditions = [{
-          evaluator = {
-            type   = "gt"
-            params = [var.api_gateway_4xx_threshold]
-          }
-          operator = { type = "and" }
-          query    = { params = ["B"] }
-          reducer  = { type = "last" }
-          type     = "query"
-        }]
-        datasource = {
-          type = "__expr__"
-          uid  = "__expr__"
-        }
-        refId         = "C"
-        intervalMs    = 1000
-        maxDataPoints = 43200
+        threshold = 1
+        type      = "gt"
       })
     }
 
-    ##############################
-    # Rule settings / metadata   #
-    ##############################
-    no_data_state  = "OK"
-    exec_err_state = "Alerting"
-
-    annotations = {
-      summary        = "High 4XX errors on API ${var.application_name}-${var.api_gateway_name}"
-      runbook_url    = var.application_runbook_url
-      __dashboardUid = var.api_gateway_dashboard_uid
-      __panelId      = var.api_gateway_panel_id
-    }
+    no_data_state   = "OK"
+    exec_err_state  = "Alerting"
 
     labels = {
       severity = "high"
       email    = var.deploy_env
+    }
+
+    annotations = {
+      summary          = "High 4XX errors on API ${var.api_gateway_name}"
+      runbook_url      = var.application_runbook_url
+      __dashboardUid__ = var.api_gateway_dashboard_uid
+      __panelId__      = var.api_gateway_panel_id
     }
   }
 }
