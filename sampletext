@@ -1,47 +1,12 @@
-data {
-  ref_id = "A"
+export secretName="/adt/frfs/cmc/dev/grafana-api-token"
 
-  relative_time_range {
-    from = 300
-    to   = 0
-  }
+secretArn=$(aws secretsmanager list-secrets \
+  --region us-gov-east-1 \
+  --query "SecretList[?Name=='$secretName'].ARN | [0]" \
+  --output text)
 
-  datasource_uid = var.cloudwatch_data_source_uid
-
-  model = jsonencode({
-    alias              = "{{metric}} {{stat}}"
-    application        = { filter = "" }
-    datasource         = { type = "cloudwatch", uid = var.cloudwatch_data_source_uid }
-    dimensions         = {
-      ApiName = [var.api_gateway_name]
-      Stage   = [var.stage_name]
-    }
-    expression         = ""
-    functions          = []
-    group              = { filter = "" }
-    highResolution     = false
-    host               = { filter = "" }
-    id                 = "e400"
-    instant            = false
-    intervalMs         = 1000
-    item               = { filter = "" }
-    label              = "${PROP('Dim.ApiName')} - ${PROP('MetricName')} ${PROP('Stat')}"
-    logGroups          = []
-    matchExact         = true
-    maxDataPoints      = 43200
-    metricEditorMode   = 0
-    metricName         = "4XXError"
-    metricQueryType    = 0
-    mode               = 0
-    namespace          = "AWS/ApiGateway"
-    options            = { showDisabledItems = false }
-    period             = "60"
-    queryLanguage      = "CWLI"
-    queryMode          = "Metrics"
-    range              = true
-    refId              = "A"
-    region             = var.aws_region
-    sqlExpression      = ""
-    statistic          = "Sum"
-  })
-}
+export TF_VAR_grafana_auth=$(aws secretsmanager get-secret-value \
+  --secret-id "$secretArn" \
+  --region us-gov-east-1 \
+  --query 'SecretString' \
+  --output text)
