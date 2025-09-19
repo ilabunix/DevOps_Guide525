@@ -1,15 +1,5 @@
-##################################
-# Block A - CloudWatch Query     #
-##################################
-data {
-  ref_id = "A"
-  relative_time_range {
-    from = 300
-    to   = 0
-  }
-
-  datasource_uid = var.cloudwatch_data_source_uid
-  model = jsonencode({
+locals {
+  apigw_query_model = {
     datasource = {
       type = "cloudwatch"
       uid  = var.cloudwatch_data_source_uid
@@ -19,23 +9,23 @@ data {
     statistic        = "Sum"
     period           = "60"
     region           = var.aws_region
-    dimensions       = {
+    dimensions = {
       ApiName = var.api_gateway_name
       Stage   = var.stage_name
     }
-    refId            = "A"
-    queryMode        = "Metrics"
-    queryType        = "CloudWatchMetrics"   # ✅ NEW
-    metricQueryType  = 0                     # ✅ NEW
-    type             = "timeseries"
-    alias            = "{{metric}}"
-    intervalMs       = 1000
-    maxDataPoints    = 43200
-    matchExact       = true
-    expression       = ""
-    id               = ""
-    instant          = false
-    metricEditorMode = 0
-    sqlExpression    = ""
-  })
+    refId             = "A"
+    queryMode         = "Metrics"
+    queryType         = "CloudWatchMetrics"
+    metricQueryType   = 0
+    type              = "timeseries"
+    alias             = "{{metric}}"
+    intervalMs        = 1000
+    maxDataPoints     = 43200
+    matchExact        = true
+    expression        = ""
+    id                = ""
+    instant           = false
+    metricEditorMode  = 0
+    sqlExpression     = ""
+  }
 }
