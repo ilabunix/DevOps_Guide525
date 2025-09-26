@@ -1,0 +1,6 @@
+I think we should look at this from a monitoring perspective. Setting up an alert on the West Lambda whenever it gets traffic isn’t ideal, because:
+	•	It would generate alerts every single time West is used, even during planned tests or low-volume probes, which could create noise.
+	•	It only tells us after failover has already occurred, not when the decision to failover was made.
+	•	It doesn’t distinguish between a real DNS/Akamai-driven failover vs. someone directly calling the West endpoint.
+
+A more reliable approach would be to understand the challenges of monitoring directly from DNS/Vercara when the origin changes (similar to how CloudFront notifies us when it switches origins). That would give us visibility into the actual failover event itself, instead of relying on West traffic as a proxy.
