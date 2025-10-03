@@ -1,0 +1,29 @@
+📌 Application / Origin Health
+	•	Origin Connection Failure
+	•	Why: Detects when Akamai cannot connect to your GovCloud ALB/API Gateway (app unreachable).
+	•	Threshold: > 1% failures over 5 min OR > 50 failures in 5 min.
+	•	Origin Server Failure (HTTP 5xx)
+	•	Why: Captures backend errors/timeouts caused by your application.
+	•	Threshold: > 0.5–1% of requests for 5 min.
+	•	Origin HTTP Status Codes (4xx/5xx trends)
+	•	Why: Identifies client/app errors (auth failures, bad requests).
+	•	Threshold: Sustained > 2% 4xx for 10 min (tune for expected 404s).
+	•	Origin SSL Transaction Failure
+	•	Why: Ensures TLS handshake between Akamai and your origin isn’t breaking.
+	•	Threshold: > 5 handshake failures/min.
+	•	Origin Read Error
+	•	Why: Detects when origin doesn’t return a full or valid response.
+	•	Threshold: > 1% over 5 min.
+	•	Edge Errors – Content Delivery (HTTP 4xx/5xx)
+	•	Why: Shows failures at Akamai edge or pass-through errors from origin.
+	•	Threshold: > 1% errors over 5 min.
+	•	Low Cache Offload (Edge tiers)
+	•	Why: Warns when caching drops and traffic shifts back to your origin.
+	•	Threshold: CacheHitRate < 70% for 15 min.
+
+DDoS Attack Detected (Edge)
+	•	Why: Alerts when Akamai identifies a volumetric or L7 DDoS.
+	•	Threshold: Immediate alert on any detection event.
+	•	DDoS Mitigation Activated / Attack Cleared
+	•	Why: Confirms scrubbing is active and when the attack ends.
+	•	Threshold: Page on mitigation start; Info on cleared.
