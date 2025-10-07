@@ -1,0 +1,67 @@
+Access and Entitlements
+
+#
+Question
+Response
+1
+Who will need to retain access?
+Access should remain only for TechOps engineers supporting the Bloomreach CMS infrastructure (Cloud Operations) and the Security team for ongoing monitoring.  AppDev teams no longer need console access as Bloomreach code/content changes are frozen pending the migration to WordPress VIP.
+2
+What entitlements are required and why?
+Read-only IAM roles for audit and monitoring, and limited administrative roles for TechOps (EC2/RDS restart, Lambda updates, SSL renewals, scaling adjustments).  CloudTrail, CloudWatch, and SNS integrations require these permissions for incident response and compliance logging.
+3
+For each entitlement, what activity or function does it enable?
+ • TechOps Admin – Allows lifecycle actions (restart EC2 instances, redeploy Lambda, update certificates). • TechOps RO – Read CloudWatch metrics, logs, and configuration for operational reviews. • Security RO – Inspect CloudTrail, IAM policies, and KMS keys for compliance. • Automation Roles – Support existing Lambda functions and SNS notifications.
+4
+Is there an established process for granting new access?
+Yes — requests continue through the standard FRB access workflow (ServiceNow → IAM approval → SCP-restricted role assignment).  No new long-term entitlements are expected; any short-term access must have explicit expiration and change-window justification.
+
+Summary of Active Bloomreach AWS Resources
+
+The Bloomreach CMS stack remains hosted in AWS Commercial (us-east-1, us-east-2, us-west-2) until the migration to WordPress VIP is completed (target ≈ next year).
+These resources are still required to keep the CMS front-end and authoring environments operational and available for content retrieval.
+
+Active AWS Services / Components
+	•	RDS (Aurora MySQL) – primary content database
+	•	EC2 (Authoring & Delivery Nodes) with Auto Scaling Groups / Launch Templates
+	•	Application Load Balancers & Target Groups
+	•	CloudFront + Lambda@Edge for global content delivery and viewer-response logic
+	•	Standard Lambda functions (Python / Node) – used for image optimization, content invalidation, and log forwarding
+	•	S3 Buckets + Replication – CMS media storage and backup
+	•	AWS Certificate Manager (ACM) – SSL/TLS certificates for CMS and CloudFront
+	•	IAM Roles & Policies / KMS Keys – secure access and data encryption
+	•	SNS & SQS Topics – alarm and queue notifications to Operations
+	•	VPC / Security Groups / Endpoints – network isolation and private connectivity
+	•	AWS Signed Internet Certificates (dev/test) – legacy environments
+
+Regions
+	•	us-east-1 → CloudFront + Lambda@Edge
+	•	us-east-2 → Primary hosting region
+	•	us-west-2 → Failover / DR region
+
+Monitoring & Alerts
+	•	6 SNS topics route alarms to the TechOps Operations DL and SMS group for RDS, ALB, EC2, and Lambda health metrics.
+
+⸻
+
+🧩 Additional Considerations
+#
+Question
+Response
+1
+Other information assets hosted in CFS 0.5 (Commercial) not owned/operated by FRFS?
+No. All Bloomreach-related assets are FRFS-managed under the Cloud Operations AWS master account, with data retained in FRFS-controlled S3 buckets and Aurora instances.
+2
+Any additional access or use not yet identified?
+None at this time. Only operational monitoring and SSL renewals are performed. New development, content updates, or integrations are frozen until the CMS migration to WordPress VIP completes.
+
+Summary Justification
+
+Bloomreach must remain in AWS Commercial temporarily because:
+	•	Migration to WordPress VIP is planned but not yet completed.
+	•	Current production traffic and content APIs still serve active FRB public websites.
+	•	Decommissioning before migration would create service outage and data-loss risks.
+
+Once the WordPress VIP cut-over is verified, all Bloomreach AWS resources will be decommissioned and access revoked, and corresponding monitoring/alarm configurations will be retired.
+
+
