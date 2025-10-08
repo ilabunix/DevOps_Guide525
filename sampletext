@@ -1,0 +1,5 @@
+The SRAP team has made good progress since the initial LRB2 “No” vote, especially around documentation and coordination with TechOps. Most artifacts are now in place for CFS2, and their engagement has improved.
+
+That said, there are still operational readiness gaps before I’d consider it fully ORC-complete. The playbooks remain too generic — they don’t explain what alerts mean in the context of SRAP functionality (for example, how specific Lambda or ALB errors impact Adobe sync or user workflows). The Cleveland team also mentioned they lack production exposure to define those details. I’ve asked Jeremiah to bring Jeremy in to help strengthen these sections.
+
+Additionally, while Grafana alerts exist, they need clearer SRAP-specific descriptions and updated recipients to include TechOps. I also noticed the DLQ alarm for the SRAP–Adobe sync hasn’t been created yet — that needs to be added.
