@@ -1,0 +1,19 @@
+Based on the official AWS statement and verified sources, here’s an accurate summary for your team:
+AWS US-EAST-1 Outage Summary - October 20, 2025
+Incident Timeline
+	•	Start: 11:49 PM PDT, October 19, 2025 (2:49 AM ET, October 20)
+	•	Root Cause Identified: 12:26 AM PDT, October 20 (3:26 AM ET)
+	•	Initial Mitigation: 2:24 AM PDT (5:24 AM ET)
+	•	Significant Recovery: 12:28 PM PDT (3:28 PM ET)
+	•	Full Resolution: ~6:00 PM PDT (9:00 PM ET) - approximately 15 hours total
+Root Cause
+DNS resolution issues for the regional DynamoDB service endpoints triggered the event ﻿WebProNews﻿. After resolving the DynamoDB DNS issue, AWS services began recovering, but a small subset of internal subsystems continued to be impaired, requiring AWS to temporarily throttle some impaired operations such as EC2 instance launches ﻿WebProNews﻿.
+Impacted AWS Services (US-EAST-1 Region)
+Core Infrastructure:
+	•	DynamoDB - Primary trigger; DNS resolution failure
+	•	EC2 - Instance launch failures, throttling applied during recovery
+	•	Lambda - Function execution errors
+	•	SQS - Connectivity issues
+	•	Amazon Connect - Service disruptions
+	•	IAM - Services relying on US-EAST-1 endpoints affected
+	•	DynamoDB Global Tables - Cross-region replication impacted
