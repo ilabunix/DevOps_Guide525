@@ -1,19 +1,9 @@
-Based on the official AWS statement and verified sources, here’s an accurate summary for your team:
-AWS US-EAST-1 Outage Summary - October 20, 2025
-Incident Timeline
-	•	Start: 11:49 PM PDT, October 19, 2025 (2:49 AM ET, October 20)
-	•	Root Cause Identified: 12:26 AM PDT, October 20 (3:26 AM ET)
-	•	Initial Mitigation: 2:24 AM PDT (5:24 AM ET)
-	•	Significant Recovery: 12:28 PM PDT (3:28 PM ET)
-	•	Full Resolution: ~6:00 PM PDT (9:00 PM ET) - approximately 15 hours total
-Root Cause
-DNS resolution issues for the regional DynamoDB service endpoints triggered the event ﻿WebProNews﻿. After resolving the DynamoDB DNS issue, AWS services began recovering, but a small subset of internal subsystems continued to be impaired, requiring AWS to temporarily throttle some impaired operations such as EC2 instance launches ﻿WebProNews﻿.
-Impacted AWS Services (US-EAST-1 Region)
-Core Infrastructure:
-	•	DynamoDB - Primary trigger; DNS resolution failure
-	•	EC2 - Instance launch failures, throttling applied during recovery
-	•	Lambda - Function execution errors
-	•	SQS - Connectivity issues
-	•	Amazon Connect - Service disruptions
-	•	IAM - Services relying on US-EAST-1 endpoints affected
-	•	DynamoDB Global Tables - Cross-region replication impacted
+Hey! re:Invent has definitely changed a lot over the years. It’s gotten significantly bigger and more crowded than it was pre-2020, which has its pros and cons.
+My honest take: if you’re a beginner to AWS, re:Invent can be a bit overwhelming. There are hundreds of sessions across multiple venues, and the logistics alone (shuttling between hotels, navigating crowds, booking sessions that fill up fast) can eat into your time.
+If you do go, here’s what I’d focus on:
+	•	Level 200 sessions (fundamentals) rather than 300/400 level sessions
+	•	Workshops where you get hands-on practice - these tend to be more valuable than lecture-style sessions
+	•	Chalk talks - smaller, more interactive sessions where you can ask questions
+	•	The Expo - talk to solution architects and partners, see demos, collect swag
+	•	Networking - honestly, this has become the biggest value. Meeting other practitioners, chatting with AWS folks, and making connections
+But here’s the thing: Most session content gets posted online within days or weeks after the event. So if learning is your primary goal, you might get more value from watching recordings at your own pace, doing online labs, and maybe attending a local AWS meetup or a smaller regional summit.
