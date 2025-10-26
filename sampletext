@@ -1,5 +1,1 @@
-Regarding the request to generate an SQL dump from the Aurora MySQL database in the QA environment — we currently don’t log in directly to the database, and our COE workstations don’t have the required client tools installed to connect and run mysqldump commands.
-
-Additionally, QA is a change-controlled environment, and setting up a temporary instance or connection there just to extract the dump wouldn’t be ideal from a governance standpoint.
-
-If this data is needed for testing or analysis purposes, we can generate the SQL dump from a lower environment such as DEV or TEST, where such operations are more appropriate and won’t impact QA stability. Please confirm if that would work for your needs, and we can proceed accordingly.
+Thanks, Trea — that makes sense. Since both probes are failing and traffic defaults to the All Fail (East), the next step will be for the team to review the probe configuration and reachability once the next change window opens. From AWS, both ALBs look healthy and reachable, so focus should be on validating the probe path, expected 2xx/3xx response, and certificate setup.
