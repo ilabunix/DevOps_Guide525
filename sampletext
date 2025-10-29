@@ -1,1 +1,0 @@
-Thanks, Trea — that makes sense. Since both probes are failing and traffic defaults to the All Fail (East), the next step will be for the team to review the probe configuration and reachability once the next change window opens. From AWS, both ALBs look healthy and reachable, so focus should be on validating the probe path, expected 2xx/3xx response, and certificate setup.
