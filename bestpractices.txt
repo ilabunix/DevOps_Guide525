@@ -1,52 +1,70 @@
-Development Labor Cost (Internal and External)
+Use Case Name
 
-Capital (initial build & rollout):
-	•	Internal CloudOps + Security + Architecture effort (part-time allocation):
-≈ 160 hours total (~$20,000)
-
-Expense:
-	•	No external vendor or consulting cost expected for production transition.
-	•	All effort performed internally using AWS native services.
+CloudOps AI Assistant – Intelligent Troubleshooting and Knowledge Retrieval
 
 ⸻
 
-Software Cost (AWS Services – Estimated Monthly Runtime)
+Headline & Problem to Solve
 
-(Assumes ~1,000–2,000 chatbot queries/month and periodic re-indexing)
+Cloud operations engineers spend significant time manually searching through Confluence pages, historical tickets, and dashboards to resolve incidents or identify recurring issues. This manual approach delays recovery, leads to inconsistent responses, and depends heavily on individual knowledge.
 
-AWS Service
-Purpose
-Monthly Cost (USD)
-Annual Cost (USD)
-Amazon Bedrock (Claude + Titan Embeddings)
-Query + embedding generation
-~$150/month
-~$1,800/year
-OpenSearch Serverless (Vector Index)
-Stores embedded knowledge base
-~$100/month
-~$1,200/year
-AWS Lambda + API Gateway
-Handles user queries + integrations
-~$30/month
-~$360/year
-Amazon S3
-Knowledge base + frontend hosting
-~$10/month
-~$120/year
-AWS KMS + CloudWatch
-Encryption + monitoring
-~$10/month
-~$120/year
-TOTAL SOFTWARE (AWS)
-~$300/month
-~$3,600/year
+The CloudOps AI Assistant leverages Generative AI to make troubleshooting faster, smarter, and standardized. It enables engineers to ask natural-language questions and receive contextual, step-by-step responses drawn directly from vetted Confluence playbooks and runbooks.
 
+The assistant uses a Retrieval-Augmented Generation (RAG) architecture built entirely on AWS. It indexes Confluence content into a secure OpenSearch vector store, uses Amazon Titan for embeddings, and Claude Sonnet via AWS Bedrock for generating accurate, human-like responses — all within FedRAMP-compliant boundaries.
 
-Ongoing Production Support Labor Cost
+⸻
 
-Capital:
-	•	None (serverless environment – auto-scaling).
+Example Graphics
 
-Expense:
-	•	Minor upkeep for content updates & testing (0.05 FTE): ~$5,000/year
+(Insert screenshots of your chatbot interface and the Confluence knowledge retrieval flow here.)
+
+⸻
+
+Benefits
+
+Immediate Benefits
+	•	Reduced MTTR: Quickly surfaces root cause and resolution steps during incidents.
+	•	Operational Efficiency: Engineers spend less time searching through Confluence manually.
+	•	Consistent Guidance: AI responses are sourced from approved playbooks, reducing human error.
+	•	Improved Knowledge Accessibility: Enables all engineers to leverage institutional knowledge instantly.
+
+Intended Users: CloudOps Engineers, Site Reliability Engineers (SREs), and Application Dev Teams.
+
+⸻
+
+Future Benefits
+	•	Scalable Knowledge Integration: Future expansion to include ServiceNow tickets or monitoring logs.
+	•	Proactive Assistance: Can be linked to CloudWatch alerts to provide AI-driven recommendations in real time.
+	•	Cross-Domain Learning: Expands across AWS service areas (Lambda, API Gateway, ALB, ECS, RDS).
+	•	Enhanced Onboarding: New engineers can quickly learn from embedded Confluence knowledge without manual search.
+
+⸻
+
+Benefits to the System
+	•	Builds a system-wide intelligent layer over existing Confluence documentation.
+	•	Promotes consistent operational practices and knowledge reuse across all business units.
+	•	Improves resiliency and readiness for production incidents.
+	•	Establishes a reusable GenAI framework for other internal use cases.
+
+⸻
+
+Risks & Mitigations
+
+Existing Risk 1: AI may retrieve outdated or irrelevant Confluence content.
+Mitigation: Scheduled content re-indexing and filtering by Confluence space/version metadata.
+
+Existing Risk 2: Unauthorized data access from restricted Confluence pages.
+Mitigation: Integration uses Confluence API tokens with scoped permissions; IAM roles enforce access boundaries.
+
+Existing Risk 3: User adoption challenges.
+Mitigation: Provide hands-on demos and show measurable MTTR improvements to drive engagement.
+
+⸻
+
+Funding Request
+
+One-time Development (Capital): ~$20,000 (internal effort only)
+Annual AWS Runtime (Bedrock, OpenSearch, Lambda, API Gateway): ~$3,600
+Annual Maintenance (content refresh, monitoring): $5,000
+Total First-Year Estimate: **$28,600 USD**
+Subsequent Years: ~$8,600 USD annually
