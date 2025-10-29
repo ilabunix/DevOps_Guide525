@@ -1,0 +1,294 @@
+//@version=5
+// VAR (VIDYA) Moving Average Crossover Strategy
+// Variable Index Dynamic Average Triple Crossover with Trend Detection
+strategy(title="VAR MA Crossover Strategy", shorttitle="VAR Cross", overlay=true, calc_on_every_tick=false, calc_on_order_fills=false)
+
+// Inputs
+length1 = input.int(title="Fast VAR Length", defval=10, minval=1)
+length2 = input.int(title="Medium VAR Length", defval=21, minval=1)
+length3 = input.int(title="Slow VAR Length", defval=34, minval=1)
+src = input.source(title="Source", defval=close)
+
+// Risk Management Inputs
+useStopLoss = input.bool(title="Use Stop Loss", defval=true, group="Risk Management")
+stopLossPercent = input.float(title="Stop Loss %", defval=2.0, minval=0.1, step=0.1, group="Risk Management")
+useTakeProfit = input.bool(title="Use Take Profit", defval=true, group="Risk Management")
+takeProfitPercent = input.float(title="Take Profit %", defval=4.0, minval=0.1, step=0.1, group="Risk Management")
+useTrailingStop = input.bool(title="Use Trailing Stop", defval=false, group="Risk Management")
+trailingStopPercent = input.float(title="Trailing Stop %", defval=1.5, minval=0.1, step=0.1, group="Risk Management")
+
+// Futures Fixed Points Mode
+useFixedPoints = input.bool(title="Use Fixed Points Mode (Futures)", defval=false, group="Futures Mode")
+fixedStopLossTicks = input.int(title="Stop Loss (Ticks)", defval=50, minval=1, group="Futures Mode", tooltip="Number of ticks for stop loss")
+fixedTakeProfitTicks = input.int(title="Take Profit (Ticks)", defval=100, minval=1, group="Futures Mode", tooltip="Number of ticks for take profit")
+tickSize = input.float(title="Tick Size", defval=0.25, minval=0.0001, step=0.0001, group="Futures Mode", tooltip="The minimum price movement (e.g., 0.25 for ES, 0.01 for NQ)")
+tickValue = input.float(title="Tick Value", defval=12.50, minval=0.01, step=0.01, group="Futures Mode", tooltip="Dollar value per tick (e.g., $12.50 for ES, $5 for NQ)")
+
+// Alert Settings
+enableAlerts = input.bool(title="Enable TradingView Alerts", defval=true, group="Alert Settings")
+alertWebhook = input.bool(title="Use Webhook (Discord/Telegram)", defval=false, group="Alert Settings", tooltip="Enable this to use webhooks for Discord/Telegram")
+
+// Filter Inputs
+useTrendFilter = input.bool(title="Only Trade in Strong Trend", defval=true, group="Filters")
+useVolatilityFilter = input.bool(title="Use Volatility Filter (ATR)", defval=true, group="Filters")
+atrLength = input.int(title="ATR Length", defval=14, minval=1, group="Filters")
+atrMultiplier = input.float(title="Min ATR Multiplier", defval=1.0, minval=0.1, step=0.1, group="Filters")
+useVolumeFilter = input.bool(title="Use Volume Filter", defval=false, group="Filters")
+volumeMA = input.int(title="Volume MA Length", defval=20, minval=1, group="Filters")
+
+// Session Filter
+useSessionFilter = input.bool(title="Use Trading Session Filter", defval=false, group="Session Filter")
+sessionTime = input.session(title="Trading Session", defval="0930-1600", group="Session Filter")
+
+// Chande Momentum Oscillator Function
+getCMO(src, length) =>
+    mom = ta.change(src)
+    upSum = math.sum(math.max(mom, 0), length)
+    downSum = math.sum(-math.min(mom, 0), length)
+    out = (upSum - downSum) / (upSum + downSum)
+    out
+
+// Calculate VIDYA for each length
+calcVIDYA(src, length) =>
+    cmo = math.abs(getCMO(src, length))
+    alpha = 2 / (length + 1)
+    vidya = 0.0
+    vidya := src * alpha * cmo + nz(vidya[1]) * (1 - alpha * cmo)
+    vidya
+
+// Calculate the three VAR moving averages
+var1 = calcVIDYA(src, length1)
+var2 = calcVIDYA(src, length2)
+var3 = calcVIDYA(src, length3)
+
+// Plot the VAR lines
+plot(var1, title="VAR 10", color=color.new(color.blue, 0), linewidth=2)
+plot(var2, title="VAR 21", color=color.new(color.orange, 0), linewidth=2)
+plot(var3, title="VAR 34", color=color.new(color.purple, 0), linewidth=2)
+
+// Crossover conditions (confirmed at candle close)
+bullishCross = ta.crossover(var1, var2)
+bearishCross = ta.crossunder(var1, var2)
+
+// Trend detection - all three VARs aligned
+bullishTrend = var1 > var2 and var2 > var3
+bearishTrend = var1 < var2 and var2 < var3
+
+// Volatility Filter (ATR)
+atr = ta.atr(atrLength)
+avgATR = ta.sma(atr, atrLength)
+volatilityOK = useVolatilityFilter ? atr > (avgATR * atrMultiplier) : true
+
+// Volume Filter
+avgVolume = ta.sma(volume, volumeMA)
+volumeOK = useVolumeFilter ? volume > avgVolume : true
+
+// Session Filter
+inSession = useSessionFilter ? not na(time(timeframe.period, sessionTime)) : true
+
+// Combined filter
+trendFilterOK = useTrendFilter ? (bullishCross and bullishTrend) or (bearishCross and bearishTrend) : true
+allFiltersOK = volatilityOK and volumeOK and inSession
+
+// Bar coloring based on trend
+barColor = bullishTrend ? color.new(color.blue, 0) : bearishTrend ? color.new(color.red, 0) : color.gray
+barcolor(barColor, title="Trend Bar Color")
+
+// Strategy Entry and Exit Logic
+if (bullishCross and allFiltersOK and (not useTrendFilter or bullishTrend))
+    strategy.entry("Long", strategy.long)
+    
+    // Calculate SL and TP based on mode
+    if useFixedPoints
+        // Fixed points mode for futures
+        stopLossPrice = close - (fixedStopLossTicks * tickSize)
+        takeProfitPrice = close + (fixedTakeProfitTicks * tickSize)
+        
+        if useStopLoss
+            strategy.exit("Long SL/TP", "Long", stop=stopLossPrice, limit=useTakeProfit ? takeProfitPrice : na)
+    else
+        // Percentage mode
+        if useStopLoss
+            strategy.exit("Long SL/TP", "Long", stop=close * (1 - stopLossPercent/100), limit=useTakeProfit ? close * (1 + takeProfitPercent/100) : na, trail_price=useTrailingStop ? close * (1 + trailingStopPercent/100) : na, trail_offset=useTrailingStop ? close * trailingStopPercent/100 : na)
+    
+if (bearishCross and allFiltersOK and (not useTrendFilter or bearishTrend))
+    strategy.close("Long")
+    strategy.entry("Short", strategy.short)
+    
+    // Calculate SL and TP based on mode
+    if useFixedPoints
+        // Fixed points mode for futures
+        stopLossPrice = close + (fixedStopLossTicks * tickSize)
+        takeProfitPrice = close - (fixedTakeProfitTicks * tickSize)
+        
+        if useStopLoss
+            strategy.exit("Short SL/TP", "Short", stop=stopLossPrice, limit=useTakeProfit ? takeProfitPrice : na)
+    else
+        // Percentage mode
+        if useStopLoss
+            strategy.exit("Short SL/TP", "Short", stop=close * (1 + stopLossPercent/100), limit=useTakeProfit ? close * (1 - takeProfitPercent/100) : na, trail_price=useTrailingStop ? close * (1 - trailingStopPercent/100) : na, trail_offset=useTrailingStop ? close * trailingStopPercent/100 : na)
+
+if (bullishCross and allFiltersOK)
+    strategy.close("Short")
+
+// Plot signals
+plotshape(bullishCross and allFiltersOK and (not useTrendFilter or bullishTrend), title="Buy Signal", location=location.belowbar, color=color.new(color.green, 0), style=shape.labelup, text="BUY", size=size.small)
+plotshape(bearishCross and allFiltersOK and (not useTrendFilter or bearishTrend), title="Sell Signal", location=location.abovebar, color=color.new(color.red, 0), style=shape.labeldown, text="SELL", size=size.small)
+
+// Plot Stop Loss and Take Profit levels
+var float longSL = na
+var float longTP = na
+var float shortSL = na
+var float shortTP = na
+
+if strategy.position_size > 0
+    if useFixedPoints
+        longSL := strategy.position_avg_price - (fixedStopLossTicks * tickSize)
+        longTP := strategy.position_avg_price + (fixedTakeProfitTicks * tickSize)
+    else
+        longSL := strategy.position_avg_price * (1 - stopLossPercent/100)
+        longTP := strategy.position_avg_price * (1 + takeProfitPercent/100)
+    
+if strategy.position_size < 0
+    if useFixedPoints
+        shortSL := strategy.position_avg_price + (fixedStopLossTicks * tickSize)
+        shortTP := strategy.position_avg_price - (fixedTakeProfitTicks * tickSize)
+    else
+        shortSL := strategy.position_avg_price * (1 + stopLossPercent/100)
+        shortTP := strategy.position_avg_price * (1 - takeProfitPercent/100)
+
+plot(strategy.position_size > 0 and useStopLoss ? longSL : na, title="Long Stop Loss", color=color.red, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size > 0 and useTakeProfit ? longTP : na, title="Long Take Profit", color=color.green, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size < 0 and useStopLoss ? shortSL : na, title="Short Stop Loss", color=color.red, style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size < 0 and useTakeProfit ? shortTP : na, title="Short Take Profit", color=color.green, style=plot.style_linebr, linewidth=2)
+
+// Background color for strong trends (optional)
+bgcolor(bullishTrend ? color.new(color.blue, 95) : bearishTrend ? color.new(color.red, 95) : na, title="Trend Background")
+
+// ==================== ALERT MESSAGES FOR DISCORD/TELEGRAM ====================
+// Create alert messages with all relevant trade information
+
+longAlertMsg = "🟢 VAR STRATEGY - LONG ENTRY\n" + 
+               "Ticker: {{ticker}}\n" + 
+               "Action: BUY/LONG\n" + 
+               "Entry Price: {{close}}\n" + 
+               (useFixedPoints ? "Stop Loss: " + str.tostring(fixedStopLossTicks) + " ticks ($" + str.tostring(fixedStopLossTicks * tickValue, "#.##") + ")\n" : "Stop Loss: " + str.tostring(stopLossPercent) + "%\n") +
+               (useFixedPoints ? "Take Profit: " + str.tostring(fixedTakeProfitTicks) + " ticks ($" + str.tostring(fixedTakeProfitTicks * tickValue, "#.##") + ")\n" : "Take Profit: " + str.tostring(takeProfitPercent) + "%\n") +
+               "RSI: " + str.tostring(ta.rsi(close, 14), "#.#") + "\n" +
+               "ATR: " + str.tostring(atr, "#.##") + "\n" +
+               "Time: {{timenow}}"
+
+shortAlertMsg = "🔴 VAR STRATEGY - SHORT ENTRY\n" + 
+                "Ticker: {{ticker}}\n" + 
+                "Action: SELL/SHORT\n" + 
+                "Entry Price: {{close}}\n" + 
+                (useFixedPoints ? "Stop Loss: " + str.tostring(fixedStopLossTicks) + " ticks ($" + str.tostring(fixedStopLossTicks * tickValue, "#.##") + ")\n" : "Stop Loss: " + str.tostring(stopLossPercent) + "%\n") +
+                (useFixedPoints ? "Take Profit: " + str.tostring(fixedTakeProfitTicks) + " ticks ($" + str.tostring(fixedTakeProfitTicks * tickValue, "#.##") + ")\n" : "Take Profit: " + str.tostring(takeProfitPercent) + "%\n") +
+                "RSI: " + str.tostring(ta.rsi(close, 14), "#.#") + "\n" +
+                "ATR: " + str.tostring(atr, "#.##") + "\n" +
+                "Time: {{timenow}}"
+
+exitAlertMsg = "⚠️ VAR STRATEGY - EXIT SIGNAL\n" + 
+               "Ticker: {{ticker}}\n" + 
+               "Action: CLOSE POSITION\n" + 
+               "Exit Price: {{close}}\n" + 
+               "Time: {{timenow}}"
+
+// Alert conditions
+if (bullishCross and allFiltersOK and (not useTrendFilter or bullishTrend) and enableAlerts)
+    alert(longAlertMsg, alert.freq_once_per_bar)
+    
+if (bearishCross and allFiltersOK and (not useTrendFilter or bearishTrend) and enableAlerts)
+    alert(shortAlertMsg, alert.freq_once_per_bar)
+
+// Dashboard Panel
+showDashboard = input.bool(title="Show Dashboard", defval=true)
+
+if showDashboard
+    // Get position information
+    inPosition = strategy.position_size != 0
+    positionSide = strategy.position_size > 0 ? "LONG" : strategy.position_size < 0 ? "SHORT" : "FLAT"
+    entryPrice = strategy.position_avg_price
+    positionSize = math.abs(strategy.position_size)
+    currentPrice = close
+    
+    // Calculate PnL
+    openPnL = inPosition ? (strategy.position_size > 0 ? (currentPrice - entryPrice) * positionSize : (entryPrice - currentPrice) * positionSize) : 0
+    openPnLPercent = inPosition ? (openPnL / (entryPrice * positionSize)) * 100 : 0
+    
+    // Calculate Risk/Reward Ratio
+    riskRewardRatio = 0.0
+    riskAmount = 0.0
+    rewardAmount = 0.0
+    
+    if useFixedPoints
+        riskAmount := fixedStopLossTicks * tickValue
+        rewardAmount := fixedTakeProfitTicks * tickValue
+        riskRewardRatio := useTakeProfit and useStopLoss ? fixedTakeProfitTicks / fixedStopLossTicks : 0
+    else
+        riskRewardRatio := useTakeProfit and useStopLoss ? takeProfitPercent / stopLossPercent : 0
+    
+    // PnL color
+    pnlColor = openPnL > 0 ? color.green : openPnL < 0 ? color.red : color.gray
+    
+    // Create dashboard table
+    var table dashboard = table.new(position=position.bottom_right, columns=2, rows=11, bgcolor=color.new(color.black, 10), border_width=2, border_color=color.new(color.gray, 50))
+    
+    // Header
+    modeText = useFixedPoints ? "VAR Strategy (FUTURES)" : "VAR Strategy Dashboard"
+    table.cell(dashboard, 0, 0, modeText, text_color=color.white, text_size=size.normal, bgcolor=color.new(color.blue, 30))
+    table.merge_cells(dashboard, 0, 0, 1, 0)
+    
+    // Position Side
+    sideColor = positionSide == "LONG" ? color.new(color.green, 70) : positionSide == "SHORT" ? color.new(color.red, 70) : color.new(color.gray, 70)
+    table.cell(dashboard, 0, 1, "Position:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 1, positionSide, text_color=color.white, text_size=size.normal, bgcolor=sideColor)
+    
+    // Entry Price
+    table.cell(dashboard, 0, 2, "Entry Price:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 2, inPosition ? str.tostring(entryPrice, "#.####") : "—", text_color=color.white, text_size=size.small)
+    
+    // Current Price
+    table.cell(dashboard, 0, 3, "Current Price:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 3, str.tostring(currentPrice, "#.####"), text_color=color.white, text_size=size.small)
+    
+    // Open PnL
+    table.cell(dashboard, 0, 4, "Open PnL:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 4, inPosition ? str.tostring(openPnL, "#.##") : "—", text_color=pnlColor, text_size=size.small)
+    
+    // Open PnL %
+    table.cell(dashboard, 0, 5, "Open PnL %:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 5, inPosition ? str.tostring(openPnLPercent, "#.##") + "%" : "—", text_color=pnlColor, text_size=size.small)
+    
+    // Risk/Reward display
+    if useFixedPoints
+        // Show risk and reward in dollars for futures
+        table.cell(dashboard, 0, 6, "Risk ($):", text_color=color.gray, text_size=size.small)
+        table.cell(dashboard, 1, 6, "$" + str.tostring(riskAmount, "#.##"), text_color=color.red, text_size=size.small)
+        
+        table.cell(dashboard, 0, 7, "Reward ($):", text_color=color.gray, text_size=size.small)
+        table.cell(dashboard, 1, 7, "$" + str.tostring(rewardAmount, "#.##"), text_color=color.green, text_size=size.small)
+    else
+        // Show filters status for percentage mode
+        table.cell(dashboard, 0, 6, "Filters OK:", text_color=color.gray, text_size=size.small)
+        filterStatus = allFiltersOK ? "✓ PASS" : "✗ FAIL"
+        filterColor = allFiltersOK ? color.green : color.red
+        table.cell(dashboard, 1, 6, filterStatus, text_color=filterColor, text_size=size.small)
+        
+        // ATR (Volatility)
+        table.cell(dashboard, 0, 7, "ATR:", text_color=color.gray, text_size=size.small)
+        table.cell(dashboard, 1, 7, str.tostring(atr, "#.####"), text_color=color.white, text_size=size.small)
+    
+    // Filters Status
+    table.cell(dashboard, 0, 8, "Filters OK:", text_color=color.gray, text_size=size.small)
+    filterStatus = allFiltersOK ? "✓ PASS" : "✗ FAIL"
+    filterColor = allFiltersOK ? color.green : color.red
+    table.cell(dashboard, 1, 8, filterStatus, text_color=filterColor, text_size=size.small)
+    
+    // ATR (Volatility)
+    table.cell(dashboard, 0, 9, "ATR:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 9, str.tostring(atr, "#.####"), text_color=color.white, text_size=size.small)
+    
+    // Risk/Reward Ratio
+    table.cell(dashboard, 0, 10, "R:R Ratio:", text_color=color.gray, text_size=size.small)
+    table.cell(dashboard, 1, 10, riskRewardRatio > 0 ? "1:" + str.tostring(riskRewardRatio, "#.#") : "—", text_color=color.yellow, text_size=size.small)
