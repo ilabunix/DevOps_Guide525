@@ -1,0 +1,52 @@
+Development Labor Cost (Internal and External)
+
+Capital (initial build & rollout):
+	•	Internal CloudOps + Security + Architecture effort (part-time allocation):
+≈ 160 hours total (~$20,000)
+
+Expense:
+	•	No external vendor or consulting cost expected for production transition.
+	•	All effort performed internally using AWS native services.
+
+⸻
+
+Software Cost (AWS Services – Estimated Monthly Runtime)
+
+(Assumes ~1,000–2,000 chatbot queries/month and periodic re-indexing)
+
+AWS Service
+Purpose
+Monthly Cost (USD)
+Annual Cost (USD)
+Amazon Bedrock (Claude + Titan Embeddings)
+Query + embedding generation
+~$150/month
+~$1,800/year
+OpenSearch Serverless (Vector Index)
+Stores embedded knowledge base
+~$100/month
+~$1,200/year
+AWS Lambda + API Gateway
+Handles user queries + integrations
+~$30/month
+~$360/year
+Amazon S3
+Knowledge base + frontend hosting
+~$10/month
+~$120/year
+AWS KMS + CloudWatch
+Encryption + monitoring
+~$10/month
+~$120/year
+TOTAL SOFTWARE (AWS)
+~$300/month
+~$3,600/year
+
+
+Ongoing Production Support Labor Cost
+
+Capital:
+	•	None (serverless environment – auto-scaling).
+
+Expense:
+	•	Minor upkeep for content updates & testing (0.05 FTE): ~$5,000/year
