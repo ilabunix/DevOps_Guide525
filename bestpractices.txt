@@ -1,70 +1,58 @@
-Use Case Name
+🎥 GenAI CloudOps Assistant – 3-Minute Demo Script
 
-CloudOps AI Assistant – Intelligent Troubleshooting and Knowledge Retrieval
+[0:00 – 0:20] – Introduction
 
-⸻
-
-Headline & Problem to Solve
-
-Cloud operations engineers spend significant time manually searching through Confluence pages, historical tickets, and dashboards to resolve incidents or identify recurring issues. This manual approach delays recovery, leads to inconsistent responses, and depends heavily on individual knowledge.
-
-The CloudOps AI Assistant leverages Generative AI to make troubleshooting faster, smarter, and standardized. It enables engineers to ask natural-language questions and receive contextual, step-by-step responses drawn directly from vetted Confluence playbooks and runbooks.
-
-The assistant uses a Retrieval-Augmented Generation (RAG) architecture built entirely on AWS. It indexes Confluence content into a secure OpenSearch vector store, uses Amazon Titan for embeddings, and Claude Sonnet via AWS Bedrock for generating accurate, human-like responses — all within FedRAMP-compliant boundaries.
+“Hi everyone, this is a quick demo of the CloudOps AI Assistant, a GenAI-powered chatbot we built to help engineers troubleshoot cloud issues faster using AWS-native services.
+The goal of this POC is to show how AI can retrieve relevant operational guidance from our existing playbooks and reduce mean time to resolution during incidents.”
 
 ⸻
 
-Example Graphics
+[0:20 – 1:00] – Problem Context
 
-(Insert screenshots of your chatbot interface and the Confluence knowledge retrieval flow here.)
+“Today, engineers spend a lot of time manually searching through Confluence pages, logs, and tickets during incidents.
+This chatbot changes that by providing an intelligent, conversational interface — so engineers can simply ask questions like ‘What caused the recent Lambda outage?’ or ‘How do I resolve API Gateway 4XX errors?’ and get contextual responses instantly.”
 
-⸻
-
-Benefits
-
-Immediate Benefits
-	•	Reduced MTTR: Quickly surfaces root cause and resolution steps during incidents.
-	•	Operational Efficiency: Engineers spend less time searching through Confluence manually.
-	•	Consistent Guidance: AI responses are sourced from approved playbooks, reducing human error.
-	•	Improved Knowledge Accessibility: Enables all engineers to leverage institutional knowledge instantly.
-
-Intended Users: CloudOps Engineers, Site Reliability Engineers (SREs), and Application Dev Teams.
+(Optional visual: show your chat UI or API Gateway endpoint page on screen.)
 
 ⸻
 
-Future Benefits
-	•	Scalable Knowledge Integration: Future expansion to include ServiceNow tickets or monitoring logs.
-	•	Proactive Assistance: Can be linked to CloudWatch alerts to provide AI-driven recommendations in real time.
-	•	Cross-Domain Learning: Expands across AWS service areas (Lambda, API Gateway, ALB, ECS, RDS).
-	•	Enhanced Onboarding: New engineers can quickly learn from embedded Confluence knowledge without manual search.
+[1:00 – 2:00] – Solution Walkthrough
+
+“Let me show you how it works.
+The chatbot uses a Retrieval-Augmented Generation architecture hosted entirely in AWS.
+Here’s the workflow:
+	1.	The query Lambda receives the user’s question through API Gateway.
+	2.	It retrieves relevant information from a vector search index in OpenSearch Serverless, which stores embeddings generated using Amazon Titan.
+	3.	The retrieved context is passed to Claude Sonnet in AWS Bedrock, which generates a structured and conversational response.
+	4.	The response is then displayed here in the chat interface hosted on S3.”
+
+(Show example question → response, e.g. “What was the cause of the last outage for SRAP?” and display Claude’s structured answer.)
+
+“Notice how it summarizes the incident, provides cause, resolution steps, and even references the original playbook.”
 
 ⸻
 
-Benefits to the System
-	•	Builds a system-wide intelligent layer over existing Confluence documentation.
-	•	Promotes consistent operational practices and knowledge reuse across all business units.
-	•	Improves resiliency and readiness for production incidents.
-	•	Establishes a reusable GenAI framework for other internal use cases.
+[2:00 – 2:40] – Key Benefits
+
+“This POC demonstrates several key benefits:
+	•	It reduces MTTR by surfacing the right answers instantly.
+	•	It ensures consistency in troubleshooting, since the responses come from validated internal playbooks.
+	•	And it keeps all data inside AWS, ensuring compliance and FedRAMP alignment — there’s no external data transfer.”
+
+(Optional visual: show architecture diagram or AWS console components — S3, OpenSearch, Lambda, API Gateway.)
 
 ⸻
 
-Risks & Mitigations
+[2:40 – 3:00] – Closing
 
-Existing Risk 1: AI may retrieve outdated or irrelevant Confluence content.
-Mitigation: Scheduled content re-indexing and filtering by Confluence space/version metadata.
-
-Existing Risk 2: Unauthorized data access from restricted Confluence pages.
-Mitigation: Integration uses Confluence API tokens with scoped permissions; IAM roles enforce access boundaries.
-
-Existing Risk 3: User adoption challenges.
-Mitigation: Provide hands-on demos and show measurable MTTR improvements to drive engagement.
+“In summary, the CloudOps AI Assistant shows how GenAI can make our operations more efficient, resilient, and knowledge-driven.
+This POC lays the groundwork for a scalable solution that can eventually integrate across all our operational teams and systems.”
+“Thank you for watching.”
 
 ⸻
 
-Funding Request
-
-One-time Development (Capital): ~$20,000 (internal effort only)
-Annual AWS Runtime (Bedrock, OpenSearch, Lambda, API Gateway): ~$3,600
-Annual Maintenance (content refresh, monitoring): $5,000
-Total First-Year Estimate: **$28,600 USD**
-Subsequent Years: ~$8,600 USD annually
+🎤 Pro Tips for Recording
+	•	Open with your chat interface and end with the architecture diagram or AWS console view.
+	•	Keep the tone natural and professional, not robotic — think executive demo rather than tutorial.
+	•	Ideal flow: Problem → Demo → Architecture → Benefits → Closing.
+	•	If possible, record with your webcam off but keep clear audio.
