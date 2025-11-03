@@ -1,10 +1,12 @@
-We’re seeing hundreds of CloudWatch metric and log-based alerts firing and resolving across CMCv2 for the last 2 days. This doesn’t appear to be an actual app issue — it’s coming from Grafana’s backend.
+We had a call this morning with the Cleveland team to review two configuration findings related to the upcoming SRAP go-live.
+	1.	Dry Run Flag (PROD Environment):
+	•	The DRY_RUN flag was found to be set to true, which prevents bulk notifications from being sent.
+	•	The team validated that individual notifications are still being sent successfully.
+	•	Since the bulk notification feature is only used once every 12 months (the next run expected in Q4 2026), this configuration does not impact the 11/09 go-live.
+	•	The team plans to update this setting to false in the January release.
+	2.	Adobe API Host Variable:
+	•	The ADOBE_API_HOST environment variable was not explicitly set in the Lambda configuration.
+	•	The code includes a default fallback value (api.na2.adobesign.com), which matches the intended endpoint.
+	•	This configuration will also be explicitly added in the January release to align with deployment standards.
 
-Error traces show:
-
-pq: remaining connection slots are reserved for superuser connections
-pq: too many clients already
-
-This indicates Grafana’s PostgreSQL connection pool is exhausted, causing alert queries to fail temporarily. When Grafana can’t run its queries, it reports “Error” → triggers alerts → then resolves once connections free up.
-
-We’ve confirmed it’s platform-side, not Lambda/ALB/API/DynamoDB-related. The fix will likely involve increasing DB connection limits or staggering alert evaluations on the Grafana side.
+Pier confirmed that both items are acceptable to defer, and these findings are not considered blockers for this week’s go-live. The team will track both for correction in the January 2026 release cycle.
