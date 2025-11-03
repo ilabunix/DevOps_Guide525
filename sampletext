@@ -1,12 +1,3 @@
-We had a call this morning with the Cleveland team to review two configuration findings related to the upcoming SRAP go-live.
-	1.	Dry Run Flag (PROD Environment):
-	•	The DRY_RUN flag was found to be set to true, which prevents bulk notifications from being sent.
-	•	The team validated that individual notifications are still being sent successfully.
-	•	Since the bulk notification feature is only used once every 12 months (the next run expected in Q4 2026), this configuration does not impact the 11/09 go-live.
-	•	The team plans to update this setting to false in the January release.
-	2.	Adobe API Host Variable:
-	•	The ADOBE_API_HOST environment variable was not explicitly set in the Lambda configuration.
-	•	The code includes a default fallback value (api.na2.adobesign.com), which matches the intended endpoint.
-	•	This configuration will also be explicitly added in the January release to align with deployment standards.
+I’ve been closely involved in the earlier go-live discussions and the tasks needed for testing, including the dry-run cutover validation. Since these are one-time activities specific to the go-live and ADT had requested my support earlier in the planning phase, it wouldn’t be fair to drop them on Murali while he’s on call. That’s why I volunteered to handle the CMCv2 production cutover this weekend.
 
-Pier confirmed that both items are acceptable to defer, and these findings are not considered blockers for this week’s go-live. The team will track both for correction in the January 2026 release cycle.
+I’ve been involved in the earlier go-live discussions and handled the lower environment and dry-run cutover testing. Since these are one-time tasks specific to the go-live and ADT had requested my support early on, it wouldn’t be fair to drop them on Murali while he’s on call. I can take care of the CMCv2 cutover this weekend. Also, the next two weekends are quite packed with both CMCv2 and SRAP going live this weekend, and SAC potentially next weekend.
