@@ -1,1 +1,5 @@
-That’s correct — if the application is deployed in a single region, the certificate only needs to be uploaded in that region. The document serves as a general step guide covering both primary and secondary region scenarios, as most apps are currently configured for dual-region setup in GovCloud. It’s expected that the person performing the renewal understands the deployment scope and applies the steps accordingly for their specific app configuration.
+That’s correct — if the application
+
+The document is intended as a standard reference guide that outlines the complete process assuming a dual-region setup, since that’s how most GovCloud applications are currently configured. For applications that run in a single region, the same steps would simply apply within that active region. The expectation is that the person performing the renewal is familiar with their app’s deployment pattern and can adjust accordingly.
+
+ is deployed in a single region, the certificate only needs to be uploaded in that region. The document serves as a general step guide covering both primary and secondary region scenarios, as most apps are currently configured for dual-region setup in GovCloud. It’s expected that the person performing the renewal understands the deployment scope and applies the steps accordingly for their specific app configuration.
