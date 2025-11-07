@@ -1,5 +1,4 @@
-That’s correct — if the application
+we’ve already added a redirect configuration on the CloudFront side in the UAT environment. Specifically, we’ve updated the behavior for /distribution/* to forward traffic to the new Akamai endpoint:
+https://downloads.uat.frbservices.org
 
-The document is intended as a standard reference guide that outlines the complete process assuming a dual-region setup, since that’s how most GovCloud applications are currently configured. For applications that run in a single region, the same steps would simply apply within that active region. The expectation is that the person performing the renewal is familiar with their app’s deployment pattern and can adjust accordingly.
-
- is deployed in a single region, the certificate only needs to be uploaded in that region. The document serves as a general step guide covering both primary and secondary region scenarios, as most apps are currently configured for dual-region setup in GovCloud. It’s expected that the person performing the renewal understands the deployment scope and applies the steps accordingly for their specific app configuration.
+This setup allows us to preserve the legacy CloudFront URL structure while routing traffic to Akamai for content delivery. Once your team sets up the redirect or path handling on the Akamai edge, we should be in a good position to fully validate the flow.
