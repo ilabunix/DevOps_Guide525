@@ -1,4 +1,0 @@
-we’ve already added a redirect configuration on the CloudFront side in the UAT environment. Specifically, we’ve updated the behavior for /distribution/* to forward traffic to the new Akamai endpoint:
-https://downloads.uat.frbservices.org
-
-This setup allows us to preserve the legacy CloudFront URL structure while routing traffic to Akamai for content delivery. Once your team sets up the redirect or path handling on the Akamai edge, we should be in a good position to fully validate the flow.
