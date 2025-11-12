@@ -1,5 +1,7 @@
-Just to confirm — our current CloudFront configuration for /distribution/* is already set up to forward traffic to an S3 origin in CFS1. To route this traffic toward the Akamai-hosted endpoint, we created a new custom origin (downloads.uat.frbservices.org) and updated the behavior to forward requests there.
+Thanks for the detailed explanation — that makes sense.
 
-However, CloudFront custom origins can only forward requests to a domain, not to a specific path (so we can’t append /fla or /flw directly in the origin configuration). Because of that, CloudFront is forwarding the full legacy path (e.g., /distribution/client/fla/index.html) exactly as-is to Akamai.
+You’re correct — CloudFront is currently configured with a custom origin pointing to downloads.uat.frbservices.org, which means it’s forwarding the full legacy path to Akamai. Since Akamai security policies rely on validating the end-user IP and not intermediary proxies, that approach isn’t ideal long-term.
 
-Since Akamai controls the downloads.uat.frbservices.org endpoint, the redirect or path mapping (from /distribution/... to /fla or /flw) would need to be handled on the Akamai edge. Once that redirect is active, CloudFront will successfully pass traffic through without any further changes needed on our side.
+We’ll move forward with your recommended solution — removing the custom origin and implementing an HTTP 301 permanent redirect within CloudFront for the /distribution/client/fla/* and /distribution/client/flw/* paths. This will ensure browsers connect directly to Akamai while maintaining the legacy URLs until user communication and decommissioning occur next year.
+
+I’ll create a lightweight CloudFront Function to handle this redirect logic and deploy it in the UAT distribution for validation before promoting to higher environments.
