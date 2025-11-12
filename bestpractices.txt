@@ -1,58 +1,7 @@
-🎥 GenAI CloudOps Assistant – 3-Minute Demo Script
+During the initial solution design, the plan was for the legacy CloudFront URLs to continue serving SAC downloads while Akamai handled the redirection to the new GovCloud-hosted endpoints. This approach was discussed at the architecture level, and the redirect setup was expected to be part of the Akamai configuration scope.
 
-[0:00 – 0:20] – Introduction
+The formal work request for that redirect should have been initiated by the Solution Architect or project team during those early design phases, since it involved changes on the Akamai edge and coordination with their delivery configuration team. However, that step was never formally submitted, so the redirect wasn’t implemented before testing.
 
-“Hi everyone, this is a quick demo of the CloudOps AI Assistant, a GenAI-powered chatbot we built to help engineers troubleshoot cloud issues faster using AWS-native services.
-The goal of this POC is to show how AI can retrieve relevant operational guidance from our existing playbooks and reduce mean time to resolution during incidents.”
+When we started UAT validation, I raised this gap and confirmed that Akamai didn’t have the redirect configured, which is why the legacy CloudFront URLs were returning access errors. We’ve since discussed it with Akamai, and they confirmed that implementing the redirect on their edge requires additional setup that can’t be completed before the 11/16 go-live.
 
-⸻
-
-[0:20 – 1:00] – Problem Context
-
-“Today, engineers spend a lot of time manually searching through Confluence pages, logs, and tickets during incidents.
-This chatbot changes that by providing an intelligent, conversational interface — so engineers can simply ask questions like ‘What caused the recent Lambda outage?’ or ‘How do I resolve API Gateway 4XX errors?’ and get contextual responses instantly.”
-
-(Optional visual: show your chat UI or API Gateway endpoint page on screen.)
-
-⸻
-
-[1:00 – 2:00] – Solution Walkthrough
-
-“Let me show you how it works.
-The chatbot uses a Retrieval-Augmented Generation architecture hosted entirely in AWS.
-Here’s the workflow:
-	1.	The query Lambda receives the user’s question through API Gateway.
-	2.	It retrieves relevant information from a vector search index in OpenSearch Serverless, which stores embeddings generated using Amazon Titan.
-	3.	The retrieved context is passed to Claude Sonnet in AWS Bedrock, which generates a structured and conversational response.
-	4.	The response is then displayed here in the chat interface hosted on S3.”
-
-(Show example question → response, e.g. “What was the cause of the last outage for SRAP?” and display Claude’s structured answer.)
-
-“Notice how it summarizes the incident, provides cause, resolution steps, and even references the original playbook.”
-
-⸻
-
-[2:00 – 2:40] – Key Benefits
-
-“This POC demonstrates several key benefits:
-	•	It reduces MTTR by surfacing the right answers instantly.
-	•	It ensures consistency in troubleshooting, since the responses come from validated internal playbooks.
-	•	And it keeps all data inside AWS, ensuring compliance and FedRAMP alignment — there’s no external data transfer.”
-
-(Optional visual: show architecture diagram or AWS console components — S3, OpenSearch, Lambda, API Gateway.)
-
-⸻
-
-[2:40 – 3:00] – Closing
-
-“In summary, the CloudOps AI Assistant shows how GenAI can make our operations more efficient, resilient, and knowledge-driven.
-This POC lays the groundwork for a scalable solution that can eventually integrate across all our operational teams and systems.”
-“Thank you for watching.”
-
-⸻
-
-🎤 Pro Tips for Recording
-	•	Open with your chat interface and end with the architecture diagram or AWS console view.
-	•	Keep the tone natural and professional, not robotic — think executive demo rather than tutorial.
-	•	Ideal flow: Problem → Demo → Architecture → Benefits → Closing.
-	•	If possible, record with your webcam off but keep clear audio.
+For now, the redirect will be handled post go-live by Akamai, and CloudFront will remain unchanged to stay aligned with the current change-freeze window.
