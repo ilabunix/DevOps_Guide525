@@ -1,7 +1,42 @@
-Thanks for the detailed explanation — that makes sense.
+Hi Team,
 
-You’re correct — CloudFront is currently configured with a custom origin pointing to downloads.uat.frbservices.org, which means it’s forwarding the full legacy path to Akamai. Since Akamai security policies rely on validating the end-user IP and not intermediary proxies, that approach isn’t ideal long-term.
+Following up on the recent discussions with the Akamai engineering group — here’s a quick summary of how we’re handling redirects for the SAC Downloads migration to GovCloud and what I’m implementing on our side:
 
-We’ll move forward with your recommended solution — removing the custom origin and implementing an HTTP 301 permanent redirect within CloudFront for the /distribution/client/fla/* and /distribution/client/flw/* paths. This will ensure browsers connect directly to Akamai while maintaining the legacy URLs until user communication and decommissioning occur next year.
+⸻
 
-I’ll create a lightweight CloudFront Function to handle this redirect logic and deploy it in the UAT distribution for validation before promoting to higher environments.
+🔹 Why Akamai Can’t Handle the Redirect
+
+Akamai is enforcing client-IP–based security and validation at their edge.
+If CloudFront continues to proxy traffic directly to Akamai, all requests appear to originate from CloudFront’s IP ranges instead of the actual end user.
+That breaks Akamai’s security checks and violates their access control model, which is why they requested that the redirect happen before traffic reaches Akamai.
+
+⸻
+
+🔹 What We’re Doing on the CloudFront Side
+
+To align with their architecture, I’m removing the custom origin we had pointing to Akamai and instead implementing a 301 permanent redirect inside CloudFront.
+This will:
+	•	Redirect requests for the legacy paths
+	•	/distribution/client/fla/*
+	•	/distribution/client/flw/*
+to the new Akamai endpoints (https://downloads.uat.frbservices.org/fla and /flw).
+	•	Ensure browsers connect directly to Akamai (bypassing CloudFront proxying).
+	•	Preserve the current legacy URLs until user communication and final cutover occur next year.
+
+I’ll handle this using a lightweight CloudFront Function that returns the 301 redirect at the viewer-request stage — no origin call or Lambda@Edge dependency needed.
+
+⸻
+
+🔹 Next Steps
+	•	Deploy the CloudFront Function in the UAT distribution for testing.
+	•	Validate redirect behavior and confirm that the browser now hits Akamai directly.
+	•	Once validated, promote the same configuration to higher environments before decommissioning the legacy CloudFront setup.
+
+⸻
+
+Summary:
+Akamai will not modify incoming traffic or perform redirects due to their edge-security model.
+We’ll issue the redirect directly from CloudFront, ensuring a secure and seamless transition to Akamai while maintaining compatibility with existing URLs through the migration window.
+
+Thanks,
+Irshad
