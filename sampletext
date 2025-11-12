@@ -1,5 +1,53 @@
 Hi Team,
 
+Here’s a quick update on the SAC Downloads redirect setup and the approach we agreed upon with the Akamai engineering team:
+
+⸻
+
+🔹 Why Akamai Can’t Handle the Redirect Before Go-Live
+
+Akamai confirmed that implementing the redirect on their edge would require additional configuration and security-policy changes on their side — changes that cannot be completed before the 11/16 go-live date.
+Their edge-side redirect would need updates to their Property Manager rules and validation logic, which are gated by change-control timelines.
+
+Additionally, because Akamai’s security model validates real end-user IPs (not CloudFront proxy IPs), proxying the traffic through CloudFront causes their ACL checks to fail.
+To stay aligned with their security posture and avoid delays, they’ve asked that the redirect occur within CloudFront instead of Akamai.
+
+⸻
+
+🔹 What We’re Doing on the CloudFront Side
+
+I’m implementing a 301 permanent redirect directly in CloudFront using a lightweight CloudFront Function.
+This function will intercept requests to:
+	•	/distribution/client/fla/*
+	•	/distribution/client/flw/*
+
+…and issue an HTTP 301 redirect to the corresponding Akamai URLs (https://downloads.uat.frbservices.org/fla and /flw).
+
+This ensures:
+	•	Browsers connect directly to Akamai (maintaining their security controls).
+	•	The legacy URLs remain functional until users are notified of the new URL structure next year.
+	•	A clean hand-off path for eventual CloudFront decommissioning.
+
+⸻
+
+🔹 Next Steps
+	•	Deploy the CloudFront Function in UAT for validation.
+	•	Confirm redirect behavior and Akamai reachability.
+	•	Once tested, promote the configuration to higher environments before go-live.
+
+⸻
+
+Summary:
+Since Akamai’s redirect changes require more work than can be completed before 11/16, we’re handling the redirect entirely on our side in CloudFront.
+This approach preserves user access, meets Akamai’s IP-validation requirements, and avoids impacting the migration schedule.
+
+Thanks,
+Irshad
+
+
+-------
+Hi Team,
+
 Following up on the recent discussions with the Akamai engineering group — here’s a quick summary of how we’re handling redirects for the SAC Downloads migration to GovCloud and what I’m implementing on our side:
 
 ⸻
