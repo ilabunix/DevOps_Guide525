@@ -1,7 +1,8 @@
-During the initial solution design, the plan was for the legacy CloudFront URLs to continue serving SAC downloads while Akamai handled the redirection to the new GovCloud-hosted endpoints. This approach was discussed at the architecture level, and the redirect setup was expected to be part of the Akamai configuration scope.
+We received a CloudWatch alarm for Bloomreach delivery node-01 due to an EC2 status check failure, and the ALB target group is reporting the instance as Unhealthy (502 Bad Gateway).
 
-The formal work request for that redirect should have been initiated by the Solution Architect or project team during those early design phases, since it involved changes on the Akamai edge and coordination with their delivery configuration team. However, that step was never formally submitted, so the redirect wasn’t implemented before testing.
+I connected through SSM to validate the instance, and the following was observed:
+	•	The instance’s uptime is very recent, indicating it was restarted or experienced an underlying host issue.
+	•	Local health check endpoint (curl https://localhost/ping -k) is returning a 502 Bad Gateway, which confirms the application on this node is not serving traffic correctly.
+	•	In the target group, this instance is failing health checks consistently with HTTP 502 while the second node remains healthy.
 
-When we started UAT validation, I raised this gap and confirmed that Akamai didn’t have the redirect configured, which is why the legacy CloudFront URLs were returning access errors. We’ve since discussed it with Akamai, and they confirmed that implementing the redirect on their edge requires additional setup that can’t be completed before the 11/16 go-live.
-
-For now, the redirect will be handled post go-live by Akamai, and CloudFront will remain unchanged to stay aligned with the current change-freeze window.
+Given the node is in an unrecoverable/unhealthy state and part of an Auto Scaling Group, the appropriate action is to terminate the instance so the ASG can launch a fresh replacement node. This will allow a new healthy instance to register back into the target group.
