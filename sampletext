@@ -1,4 +1,5 @@
-We observed another recurrence where emails briefly queued in a “processing” state before clearing. There is no customer impact other than a short delay, and all messages are ultimately completing as expected.
+EUS debug logging remains enabled, and the Cisco support case is still open. We will continue to monitor the environment closely for the remainder of the day.
 
-EUS has now enabled additional debug logging to capture more detail during the next occurrence. They have also opened a support case with Cisco to investigate any potential underlying messaging or appliance-side latency contributing to these intermittent delays.
-
+Next Steps:
+	•	Ongoing monitoring for any additional delays.
+	•	Await feedback from Cisco support if further anomalies are detected.
