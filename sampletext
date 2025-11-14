@@ -1,12 +1,13 @@
 Incident Number: 
+
 Issue Recap:
-FedLine credential-related issue reported. UIM is pending DDS step completion due to credential validation problems. Password resets sent by EUACs are also being affected.
+Emails for FedLine credential workflows were stuck in a processing state but have now started going through. EUS was engaged and did not find any user-side issues. While reviewing logs, we observed an MQ/JMS exception which may be contributing to the intermittent processing delays. We are engaging EMSS to investigate the MQ/JMS behavior further.
 
 Services/Applications Impacted:
-FedLine Web – Channel / Credential Management
+FedLine Web – Credential Processing / Notification Delivery
 
 Business/Customer Impact:
-Users are unable to complete credential setup or receive expected password resets. This may block access to FedLine services for impacted customers until credentials are successfully validated.
+Credential-related emails (including password resets and UIM notifications) were delayed, potentially preventing customers from completing credential setup or access workflows. Emails are currently flowing again, but underlying cause remains under investigation.
 
 Next Steps:
-	•	Awaiting DDS step from UIM for credential processing.
+	•	EMSS to review MQ/JMS exceptions seen during message processing.
