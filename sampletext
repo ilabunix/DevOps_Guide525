@@ -1,13 +1,8 @@
-Incident Number: 
+Follow-up Update – INC1530XXX
 
-Issue Recap:
-Emails for FedLine credential workflows were stuck in a processing state but have now started going through. EUS was engaged and did not find any user-side issues. While reviewing logs, we observed an MQ/JMS exception which may be contributing to the intermittent processing delays. We are engaging EMSS to investigate the MQ/JMS behavior further.
+EUS did not identify any user-side cause and EMSS was engaged to review MQ/JMS behavior. No specific MQ issues were found; however, further review of DDS metrics shows the Messaging Listener Service (ddsEngineCluster – MailDeliveryBean) is exhibiting higher-than-normal processing time, which aligns with the observed delays in email processing earlier.
 
-Services/Applications Impacted:
-FedLine Web – Credential Processing / Notification Delivery
-
-Business/Customer Impact:
-Credential-related emails (including password resets and UIM notifications) were delayed, potentially preventing customers from completing credential setup or access workflows. Emails are currently flowing again, but underlying cause remains under investigation.
+As a proactive measure, the team will proceed with a rolling restart of the DDS engines (66 engines in total) to stabilize processing and prevent a recurrence during upcoming activity volumes.
 
 Next Steps:
-	•	EMSS to review MQ/JMS exceptions seen during message processing.
+	•	Perform rolling restart of DDS engines.
