@@ -1,8 +1,3 @@
-Follow-up Update – INC1530XXX
+The rolling restart of all DDS/JMS engines has been completed successfully. Post-restart validation shows that messages are flowing normally, queued items have cleared, and MailDeliveryBean processing time has returned to expected levels. Health check files are processing as expected, including federal delivery validations.
 
-EUS did not identify any user-side cause and EMSS was engaged to review MQ/JMS behavior. No specific MQ issues were found; however, further review of DDS metrics shows the Messaging Listener Service (ddsEngineCluster – MailDeliveryBean) is exhibiting higher-than-normal processing time, which aligns with the observed delays in email processing earlier.
-
-As a proactive measure, the team will proceed with a rolling restart of the DDS engines (66 engines in total) to stabilize processing and prevent a recurrence during upcoming activity volumes.
-
-Next Steps:
-	•	Perform rolling restart of DDS engines.
+Teams (EUS, EMSS, MSS, DDS) did not identify a definitive root cause, but based on observed MSS/Dynatrace metrics, the elevated processing time in the Messaging Listener Service was likely contributing to earlier delays. The proactive restart appears to have stabilized the environment.
