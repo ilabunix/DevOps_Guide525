@@ -1,29 +1,12 @@
-function handler(event) {
-  var request = event.request;
-  var uri = request.uri;
+Incident Number: 
+Issue Recap:
+FedLine credential-related issue reported. UIM is pending DDS step completion due to credential validation problems. Password resets sent by EUACs are also being affected.
 
-  // Redirect for /distribution/client/fla/*
-  if (uri.startsWith('/distribution/client/fla')) {
-    return {
-      statusCode: 301,
-      statusDescription: 'Moved Permanently',
-      headers: {
-        location: { value: 'https://downloads.uat.frbservices.org/fla' }
-      }
-    };
-  }
+Services/Applications Impacted:
+FedLine Web – Channel / Credential Management
 
-  // Redirect for /distribution/client/flw/*
-  if (uri.startsWith('/distribution/client/flw')) {
-    return {
-      statusCode: 301,
-      statusDescription: 'Moved Permanently',
-      headers: {
-        location: { value: 'https://downloads.uat.frbservices.org/flw' }
-      }
-    };
-  }
+Business/Customer Impact:
+Users are unable to complete credential setup or receive expected password resets. This may block access to FedLine services for impacted customers until credentials are successfully validated.
 
-  // For all other paths, continue normal processing
-  return request;
-}
+Next Steps:
+	•	Awaiting DDS step from UIM for credential processing.
