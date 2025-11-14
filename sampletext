@@ -1,3 +1,4 @@
-The rolling restart of all DDS/JMS engines has been completed successfully. Post-restart validation shows that messages are flowing normally, queued items have cleared, and MailDeliveryBean processing time has returned to expected levels. Health check files are processing as expected, including federal delivery validations.
+We observed another recurrence where emails briefly queued in a “processing” state before clearing. There is no customer impact other than a short delay, and all messages are ultimately completing as expected.
 
-Teams (EUS, EMSS, MSS, DDS) did not identify a definitive root cause, but based on observed MSS/Dynatrace metrics, the elevated processing time in the Messaging Listener Service was likely contributing to earlier delays. The proactive restart appears to have stabilized the environment.
+EUS has now enabled additional debug logging to capture more detail during the next occurrence. They have also opened a support case with Cisco to investigate any potential underlying messaging or appliance-side latency contributing to these intermittent delays.
+
