@@ -1,5 +1,89 @@
-EUS debug logging remains enabled, and the Cisco support case is still open. We will continue to monitor the environment closely for the remainder of the day.
+The teams discovered that VIPs (4.2 and .4) — which are lock VIPs for customers — were incorrectly assigned to both the Blue and Green deployments.
+They are supposed to be assigned to only one environment at a time (either Blue or Green), not both.
 
-Next Steps:
-	•	Ongoing monitoring for any additional delays.
-	•	Await feedback from Cisco support if further anomalies are detected.
+What Happened
+	1.	After recent cluster upgrades, someone checked the VIPs and saw that Blue and Green both had the same VIPs attached.
+	2.	The team tried to fix it by removing the VIPs from Blue.
+	3.	But in doing so, the F5 controller (between Openshift and F5 AS3) got confused.
+	4.	The system went into an unstable / inconsistent state.
+	5.	Traffic began routing unpredictably to both Blue and Green, instead of only to the active environment.
+
+Impact
+	•	External traffic started flowing into the Green deployment, which should not happen (Green isn’t the live prod).
+	•	Internal traffic continued hitting Blue.
+	•	CC-3 VIPs were essentially broken (“basically ********* up”).
+	•	CIM access issues were observed.
+	•	The environment was no longer in a steady state, meaning routing behavior was unpredictable.
+
+Root Cause (in plain English)
+
+Misconfigured VIP assignments + partial cleanup created a half-Blue / half-Green routing situation, confusing the F5 controller and causing traffic to hit both environments at the same time.
+
+Current State
+	•	Traffic is being routed to CC-1 as a temporary workaround.
+	•	A static route change helped temporarily.
+	•	The team is not doing a blue-green switch — they are simply trying to restore the environment to a normal, stable state.
+	•	It takes ~90 seconds for routing to stabilize after the fix.
+
+⸻
+
+📌 One-Sentence Summary
+
+VIPs meant for only one environment ended up attached to both Blue and Green, confusing F5 routing logic and causing unpredictable traffic between both deployments, resulting in customer impact and an unstable environment.
+
+
+Next Steps (Agreed by Team)
+
+1. Recreate the missing VIPs in CC-3
+	•	The VIPs that were accidentally removed from CC-3 need to be recreated today.
+	•	This recreation will not impact customer routing because traffic is temporarily forced to CC-1 via the static route.
+
+2. Keep the static route in place during VIP recreation
+	•	The static route that currently forces traffic to CC-1 must remain active while CC-3 VIPs are recreated.
+	•	This ensures:
+	•	No traffic swings between CC-1 and CC-3 during the operation
+	•	No risk of customers hitting partially-configured environments
+	•	Stable routing during business hours
+
+3. Do NOT flip customer traffic during the day
+	•	The team agreed it is too risky to swing live traffic between CC-1 and CC-3 during the middle of the day.
+	•	VIP recreation should occur without re-routing users.
+
+4. After VIP recreation, validate that the static route still holds
+	•	There is concern that recreating the VIP could cause it to “recreate itself wrong” or override routing.
+	•	So after recreating:
+	•	Validate routing remains pointed to CC-1.
+	•	Confirm no unexpected rerouting occurs.
+
+5. Remove the static route later during a controlled time window
+	•	The actual removal of the static route returning traffic back to CC-3 will be done later, at an agreed safe window.
+	•	Likely during:
+	•	Low-volume time
+	•	Evening maintenance window
+	•	Or after-hours (to minimize risk)
+
+6. Confirm the static is on external core switches (not LTMS)
+	•	Roger confirmed the static route is controlled at the external core network switches, not tied to LTMS.
+	•	Good: recreating VIPs will not override this static.
+
+7. Team assignments
+	•	Matt + TomTom + Dina will take action on the static route changes / validation.
+	•	Matt specifically is verifying timing and that recreating VIPs won’t disrupt routing.
+
+⸻
+
+📌 Simplified Step-by-Step Plan
+	1.	Today morning – Recreate VIPs in CC-3.
+	2.	Keep static route active so all traffic still goes to CC-1.
+	3.	Verify routing stability after VIP recreation.
+	4.	Pick a safe window (evening / weekend) to remove static route.
+	5.	Remove static route → restore normal routing to CC-3.
+	6.	Monitor environment to ensure VIP does not auto-recreate incorrectly.
+
+⸻
+
+📘 One-Sentence Summary
+
+The team will recreate missing VIPs in CC-3 while keeping traffic locked to CC-1 via the static route, validate everything is stable, and only later remove the static route during a low-risk window to safely restore normal routing.
+
+
