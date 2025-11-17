@@ -1,3 +1,1 @@
-We initially identified that several VIPs were incorrectly assigned to both the Blue and Green deployments, which caused the F5 controller to get into a confused state and resulted in unpredictable routing between CC-1 and CC-3. To stabilize the environment, a temporary static route was applied to force all traffic to CC-1.
-
-The EBS team has now recreated the missing VIPs in CC-3, and routing remains stable under the static route. The plan is to remove the static route during the maintenance window on Sunday (11/23) to restore normal routing back to CC-3. No further customer impact is expected, and we’ll continue to monitor until the change is completed.
+We’ve updated the static landing page in the CFS 0.5 SAC QA environment (with help from DMT) to display the new CFS2 UAT SAC URLs. This ensures that if users arrive via the legacy URLs, they are clearly guided to the new locations.
