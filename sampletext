@@ -1,56 +1,13 @@
-Implementation Plan
+I completed the manual upload of the SAC client zip files to the S3 buckets in both regions and updated the corresponding checksum values in Parameter Store.
 
-Install Plan
+The original instructions from the Clev team suggested generating the SHA256 checksum locally (using Git Bash) and updating Parameter Store prior to uploading. However, this did not work as expected — the Lambda quarantine workflow moved the uploaded objects into the quarantine folder because the checksum didn’t match what Lambda computed.
 
-No code deployment. Manual artifact upload + parameter update.
+Upon checking CloudWatch logs, I found that Lambda was validating against the full-object checksum generated after multipart upload, which differs from the locally generated checksum.
 
-Release Playbook
+To resolve this:
+	1.	I uploaded the files first.
+	2.	Observed the Lambda-logged checksum value for each file (full-object checksum).
+	3.	Updated the Parameter Store entries using those expected values.
+	4.	Verified the files were released from quarantine and successful in both regions.
 
-Pre-deployment Steps
-	1.	Confirm change window is open and all required approvals are in place.
-	2.	Validate access to:
-	•	S3 buckets in us-east-1 and us-west-2
-	•	AWS Systems Manager Parameter Store (both regions)
-	3.	Download the approved SAC client ZIP files to your workstation.
-	4.	Generate/verify the SHA-256 checksum for each ZIP file.
-
-Deployment Steps
-	1.	Upload SAC Client ZIP Files to S3
-	•	Navigate to the target S3 bucket in us-east-1.
-	•	Upload the new SAC client ZIP file into the appropriate folder/path.
-	•	Repeat the upload in us-west-2 bucket.
-	2.	Update Parameter Store Checksums
-	•	Locate the Parameter Store entries containing the checksum value (one per region).
-	•	Update the parameter’s value with the new SHA-256 checksum.
-	•	Save and confirm the updated version in both regions.
-	3.	Validation
-	•	Validate the S3 objects show the correct upload timestamp and size.
-	•	Confirm the checksum value in Parameter Store matches the newly uploaded file.
-	•	Confirm expected application/API health checks remain stable.
-
-⸻
-
-Test / Verification Plan
-	1.	Trigger or wait for the application to retrieve the updated SAC client from S3 (based on app behavior).
-	2.	Confirm the application successfully reads the updated checksum from Parameter Store.
-	3.	Validate there are no 4XX/5XX CloudWatch alarms for the application components.
-	4.	Engage ADT team (if applicable) to confirm no regression in client connectivity or customer flows.
-	5.	Monitor logs for 10–15 minutes to ensure no checksum mismatch or S3 access errors.
-
-⸻
-
-Backout (Rollback) Plan
-
-If any issue arises:
-	1.	Restore Previous ZIP Files
-	•	Re-upload the previous known-good SAC client ZIP file to S3 (both regions).
-	•	Overwrite or rename the object depending on bucket structure.
-	2.	Revert Parameter Store Checksum
-	•	Open Systems Manager Parameter Store.
-	•	Select the previous version of the checksum parameter.
-	•	Use “Revert to previous version” or manually paste the last known-good checksum value.
-	3.	Validation
-	•	Confirm S3 contains the old ZIP file.
-	•	Confirm Parameter Store shows the previous checksum version.
-	•	Monitor logs and CloudWatch alarms for stability.
-	4.	Notify stakeholders once rollback is completed and systems are stable.
+Everything is now complete and aligned with the SAC workflow.
