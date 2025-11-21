@@ -1,9 +1,0 @@
-mysqldump \
-  --single-transaction \
-  --quick \
-  --compress \
-  --set-gtid-purged=OFF \
-  -h bloomreach-10-cluster.cluster-xxxx.us-east-2.rds.amazonaws.com \
-  -u dump_user -p \
-  <database_name> \
-  > bloomreach_dev_dump.sql
