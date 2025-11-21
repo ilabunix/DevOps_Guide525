@@ -1,0 +1,18 @@
+We had an intermittent issue in the DDS environment where credential-related emails were getting stuck in a “processing” state before eventually completing. There was no customer impact beyond short delays.
+
+We engaged multiple teams—EUS, EMSS, MSS—and while no definitive root cause was identified, metrics showed abnormally high processing time on the Messaging Listener Service (MailDeliveryBean) within the DDS engine cluster. As a proactive measure, we performed a rolling restart of all DDS/JMS engines, which stabilized performance.
+
+We did see one brief recurrence afterward, but it cleared on its own. EUS has enabled debug logging, and they’ve opened a support case with Cisco to investigate any messaging or appliance-level latency.
+
+Since then, no further issues have been observed, and we continue to monitor while waiting for Cisco’s analysis.
+
+Cisco Findings:
+	•	Their senior engineer reviewed available logs and telemetry, but detailed ICID logs had rolled over, so a full RCA for the exact event isn’t possible.
+	•	Based on the remaining data, Cisco saw significant spikes in mail injection volume around the time of the delay.
+	•	When combined with complex messages that require more processing, this high injection load could have contributed to the observed delay.
+	•	Importantly, Cisco found no operational issues with the appliance (ESA1) during the timeframe. The device is functioning normally.
+	•	They recommend continuing monitoring through the week to ensure stability.
+
+Current Status:
+	•	No further delays have been observed since the last update.
+	•	Debug remains enabled and we are continuing to monitor while Cisco leaves the case open for the week.
