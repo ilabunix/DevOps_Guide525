@@ -1,0 +1,5 @@
+. For anything that stays in AWS, the traffic is fully handled by AWS WAF and the Fortinet managed rule group.
+
+For applications that still live on-prem, we don’t inspect them through AWS WAF — the traffic is routed through the Akamai front end via our redirect origin setup. So on-prem apps are protected by Akamai, not AWS WAF or FortiWeb.
+
+There’s no FortiWeb appliance in this path.
