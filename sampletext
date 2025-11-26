@@ -1,0 +1,3 @@
+is using AWS WAF, not the FortiWeb appliance platform. In our AWS WAF configuration, we have the Fortinet-managed rule group (Fortinet-all_rules) enabled, which is automatically updated by Fortinet/FortiGuard through AWS Marketplace.
+
+Because of that, the FortiWeb patching NAIT performed does not apply to this setup — our protection is handled through AWS WAF’s managed rules, and there is no appliance-level patching required on our side.
